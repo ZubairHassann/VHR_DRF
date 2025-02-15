@@ -1,0 +1,296 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<div class="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100">
+  <!-- Header -->
+  <div class="bg-white shadow-md">
+    <div class="max-w-6xl mx-auto px-4 py-6">
+      <div class="flex items-center justify-between">
+        <div>
+          <h1 class="text-3xl font-bold text-gray-900">Video Interview</h1>
+          <p class="mt-2 text-gray-600">Welcome, {{ applicant_name }}</p>
+        </div>
+        <div class="bg-blue-50 px-4 py-2 rounded-lg">
+          <p class="text-sm text-blue-800 font-medium">Interview in Progress</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="question-container" class="max-w-5xl mx-auto p-6 space-y-8">
+    {% csrf_token %}
+    {% for question in questions %}
+    <div 
+      class="question bg-white rounded-xl shadow-lg transform transition-all duration-300"
+      id="question-{{ forloop.counter0 }}"
+      {% if not forloop.first %}style="display: none;"{% endif %}
+      data-question-id="{{ question.id }}"
+    >
+      <!-- Question Content -->
+      <div class="p-8">
+        <div class="flex items-center gap-3 mb-6">
+          <span class="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-medium">
+            Question {{ forloop.counter }}
+          </span>
+          <span class="text-gray-500 text-sm">Max Duration: 60 seconds</span>
+        </div>
+
+        <h3 class="text-xl font-semibold text-gray-800 mb-4">{{ question.text }}</h3>
+
+        <!-- Video Section -->
+        <div class="bg-gray-900 rounded-lg overflow-hidden mb-6">
+          <!-- Live Preview -->
+          <video
+            id="video-preview-{{ forloop.counter0 }}"
+            class="w-full aspect-video object-cover hidden"
+            autoplay
+            muted
+          ></video>
+
+          <!-- Recorded Video -->
+          <video
+            id="recorded-video-{{ forloop.counter0 }}"
+            class="w-full aspect-video object-cover hidden"
+            controls
+          ></video>
+
+          <!-- Timer -->
+          <div
+            id="timer-{{ forloop.counter0 }}"
+            class="hidden absolute top-4 right-4 bg-red-500 text-white px-3 py-1 rounded-full text-sm font-medium shadow-lg"
+          >
+            60s
+          </div>
+        </div>
+
+        <!-- Controls -->
+        <div class="space-y-4">
+          <!-- Main Controls -->
+          <div class="flex justify-center gap-4">
+            <button
+              id="start-btn-{{ forloop.counter0 }}"
+              onclick="startRecording({{ forloop.counter0 }})"
+              class="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-medium transition-all duration-200"
+            >
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <circle cx="12" cy="12" r="10" stroke-width="2"/>
+                <circle cx="12" cy="12" r="3" fill="currentColor"/>
+              </svg>
+              Start Recording
+            </button>
+
+            <button
+              id="stop-btn-{{ forloop.counter0 }}"
+              onclick="stopRecording({{ forloop.counter0 }})"
+              class="hidden flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-lg font-medium transition-all duration-200"
+            >
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <rect width="16" height="16" x="4" y="4" stroke-width="2"/>
+              </svg>
+              Stop Recording
+            </button>
+          </div>
+
+          <!-- Preview Actions -->
+          <div
+            id="preview-actions-{{ forloop.counter0 }}"
+            class="hidden flex justify-center gap-4"
+          >
+            <button
+              onclick="saveRecordedVideo({{ forloop.counter0 }})"
+              class="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg font-medium transition-all duration-200"
+            >
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+              </svg>
+              Submit and Continue
+            </button>
+
+            <button
+              onclick="retryRecording({{ forloop.counter0 }})"
+              class="flex items-center gap-2 bg-gray-600 hover:bg-gray-700 text-white px-6 py-3 rounded-lg font-medium transition-all duration-200"
+            >
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+              </svg>
+              Record Again
+            </button>
+
+            <button
+              id="skip-btn-{{ forloop.counter0 }}"
+              onclick="skipToNext({{ forloop.counter0 }})"
+              class="flex items-center gap-2 bg-yellow-600 hover:bg-yellow-700 text-white px-6 py-3 rounded-lg font-medium transition-all duration-200"
+            >
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 5l7 7-7 7M5 5l7 7-7 7"/>
+              </svg>
+              Skip Question
+            </button>
+          </div>
+        </div>
+
+        <!-- Guidelines -->
+        <div class="mt-8 bg-blue-50 rounded-lg p-4">
+          <h4 class="text-sm font-medium text-blue-800 mb-2">Recording Tips:</h4>
+          <ul class="text-sm text-blue-700 space-y-1">
+            <li>• Find a quiet space with good lighting</li>
+            <li>• Position yourself in the center of the frame</li>
+            <li>• Speak clearly and maintain eye contact</li>
+            <li>• You can review your recording before submitting</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+
+<!-- Keep original JavaScript -->
+<script>
+  let timer;
+  const MAX_RECORDING_TIME = 60;
+  let videoStream;
+  let mediaRecorder;
+  let recordedChunks = [];
+
+  async function startRecording(index) {
+    try {
+      videoStream = await navigator.mediaDevices.getUserMedia({
+        video: true,
+        audio: true,
+      });
+      let previewVideo = document.getElementById(`video-preview-${index}`);
+      previewVideo.srcObject = videoStream;
+      previewVideo.classList.remove("hidden");
+
+      recordedChunks = [];
+      mediaRecorder = new MediaRecorder(videoStream, {
+        mimeType: "video/webm",
+      });
+
+      mediaRecorder.ondataavailable = (event) => recordedChunks.push(event.data);
+      mediaRecorder.onstop = () => showPreview(index);
+
+      mediaRecorder.start();
+      document.getElementById(`start-btn-${index}`).classList.add("hidden");
+      document.getElementById(`stop-btn-${index}`).classList.remove("hidden");
+
+      let timerDisplay = document.getElementById(`timer-${index}`);
+      let seconds = MAX_RECORDING_TIME;
+      timerDisplay.textContent = `${seconds}s`;
+      timerDisplay.classList.remove("hidden");
+
+      timer = setInterval(() => {
+        seconds--;
+        timerDisplay.textContent = `${seconds}s`;
+        if (seconds <= 0) {
+          stopRecording(index);
+        }
+      }, 1000);
+    } catch (error) {
+      alert("Error accessing the camera: " + error.message);
+      console.error(error);
+    }
+  }
+
+  function stopRecording(index) {
+    clearInterval(timer);
+    document.getElementById(`timer-${index}`).classList.add("hidden");
+    mediaRecorder.stop();
+    videoStream.getTracks().forEach((track) => track.stop());
+
+    let previewVideo = document.getElementById(`video-preview-${index}`);
+    previewVideo.srcObject = null;
+    previewVideo.classList.add("hidden");
+
+    document.getElementById(`stop-btn-${index}`).classList.add("hidden");
+  }
+
+  function showPreview(index) {
+    let blob = new Blob(recordedChunks, { type: "video/webm" });
+    let videoUrl = URL.createObjectURL(blob);
+
+    let recordedVideo = document.getElementById(`recorded-video-${index}`);
+    recordedVideo.src = videoUrl;
+    recordedVideo.classList.remove("hidden");
+
+    document.getElementById(`preview-actions-${index}`).classList.remove("hidden");
+  }
+
+  function saveRecordedVideo(index) {
+    let blob = new Blob(recordedChunks, { type: "video/webm" });
+    let formData = new FormData();
+    formData.append("applicant", "{{ applicant_id }}");
+    formData.append(
+      "question",
+      document.getElementById(`question-${index}`).dataset.questionId
+    );
+    formData.append("video_response", blob, `response_${index}.webm`);
+
+    let csrfToken = document.querySelector("[name=csrfmiddlewaretoken]").value;
+
+    fetch("http://127.0.0.1:8000/api/applicant-responses/", {
+      method: "POST",
+      headers: {
+        "X-CSRFToken": csrfToken,
+      },
+      body: formData,
+    })
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error("Network response was not ok");
+        }
+        return response.json();
+      })
+      .then((data) => {
+        if (data.success) {
+          document.getElementById(`preview-actions-${index}`).classList.add("hidden");
+          document.getElementById(`next-btn-${index}`).classList.remove("hidden");
+        } else {
+          alert("Answer Submitted, Go to next?");
+        }
+      })
+      .catch((error) => {
+        console.error("Error uploading video:", error);
+        alert("Upload failed: " + error.message);
+      })
+      .finally(() => {
+        nextQuestion(index);
+      });
+  }
+
+  function retryRecording(index) {
+    document.getElementById(`recorded-video-${index}`).classList.add("hidden");
+    document.getElementById(`preview-actions-${index}`).classList.add("hidden");
+    document.getElementById(`start-btn-${index}`).classList.remove("hidden");
+    recordedChunks = [];
+  }
+
+  function skipToNext(index) {
+    if (mediaRecorder && mediaRecorder.state === "recording") {
+      stopRecording(index);
+    }
+
+    document.getElementById(`question-${index}`).style.display = "none";
+
+    let nextQuestion = document.getElementById(`question-${index + 1}`);
+    if (nextQuestion) {
+      nextQuestion.style.display = "block";
+    } else {
+      alert("You have completed all questions!");
+    }
+  }
+
+  function nextQuestion(index) {
+    document.getElementById(`question-${index}`).style.display = "none";
+
+    let nextQuestion = document.getElementById(`question-${index + 1}`);
+    if (nextQuestion) {
+      nextQuestion.style.display = "block";
+    } else {
+      alert("You have completed all questions!");
+    }
+  }
+</script>
+
+{% endblock %}
