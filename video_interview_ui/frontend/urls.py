@@ -1,7 +1,7 @@
 from django.urls import path
-from .views import index, video_interview
+from . import views
 
 urlpatterns = [
-    path("", index, name="index"),
-    path("video-interview/<int:applicant_id>/", video_interview, name="video_interview"),
+    path('', views.index, name='index'),
+    path('video_interview/<int:applicant_id>/', views.video_interview, name='video_interview'),
 ]

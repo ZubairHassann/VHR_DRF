@@ -32,6 +32,6 @@ class ApplicantResponse(models.Model):
     video_response = models.FileField(upload_to="videos/")
     submission_time = models.DateTimeField(auto_now_add=True)
     status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='Pending')
-
+    
     def __str__(self):
         return f"{self.applicant.fullname} - {self.question.text[:30]}"
