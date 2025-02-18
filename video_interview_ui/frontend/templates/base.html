@@ -9,16 +9,28 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     
-    <!-- Add custom styles -->
+    <!-- Custom styles with modern touches -->
     <style>
-        /* Smooth scrolling */
-        html {
-            scroll-behavior: smooth;
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+        :root {
+            --primary-gradient: linear-gradient(135deg, #4F46E5 0%, #7C3AED 100%);
+            --secondary-gradient: linear-gradient(135deg, #3B82F6 0%, #2563EB 100%);
         }
-        
-        /* Navigation link hover effect */
+
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+
+        .glass-effect {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
         .nav-link {
             position: relative;
+            transition: all 0.3s ease;
         }
         
         .nav-link::after {
@@ -27,141 +39,233 @@
             width: 0;
             height: 2px;
             bottom: -4px;
-            left: 0;
-            background-color: #fff;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #fff;
             transition: width 0.3s ease;
+            border-radius: 2px;
         }
         
         .nav-link:hover::after {
             width: 100%;
         }
+
+        .animate-gradient {
+            background-size: 200% 200%;
+            animation: gradient 15s ease infinite;
+        }
+
+        @keyframes gradient {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+        .nav-blur {
+            backdrop-filter: blur(10px);
+            background: rgba(79, 70, 229, 0.85);
+        }
+        
+        .brand-text {
+            background: linear-gradient(to right, #fff, #818cf8);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .nav-pill {
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .nav-pill::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.1);
+            transition: all 0.3s ease;
+        }
+        
+        .nav-pill:hover::before {
+            left: 0;
+        }
+    
+        @keyframes slideDown {
+            from { transform: translateY(-100%); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+    
+        .slide-in-top {
+            animation: slideDown 0.3s ease forwards;
+        }
     </style>
 </head>
-<body class="flex flex-col min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
-    <!-- Navigation Bar -->
-    <nav class="bg-gradient-to-r from-blue-600 to-blue-800 shadow-lg sticky top-0 z-50">
-        <div class="container mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex items-center justify-between h-16">
-                <!-- Logo and Brand -->
+<body class="flex flex-col min-h-screen bg-slate-50">
+    <!-- Modern Navigation Bar -->
+    <nav class="nav-blur sticky top-0 z-50 border-b border-white/10">
+        <div class="max-w-7xl mx-auto px-4">
+            <div class="flex items-center justify-between h-14">
+                <!-- Compact Logo -->
                 <div class="flex items-center space-x-3">
-                    <div class="flex-shrink-0 bg-white bg-opacity-10 p-2 rounded-lg">
-                        <i class="fas fa-users-gear text-2xl text-white transform hover:scale-110 transition-transform duration-300"></i>
+                    <div class="glass-effect p-1.5 rounded-lg transform hover:scale-105 transition-all duration-300">
+                        <i class="fas fa-users-gear text-lg text-white"></i>
                     </div>
-                    <h1 class="text-2xl font-bold text-white tracking-wider hover:text-blue-100 transition-colors duration-300">
-                        Virtual HR
+                    <h1 class="text-xl font-bold brand-text tracking-tight">
+                        Virtual<span class="text-indigo-200">HR</span>
                     </h1>
                 </div>
-
-                <!-- Desktop Navigation -->
-                <div class="hidden md:flex items-center space-x-8">
-                    <a href="/" class="nav-link text-white hover:text-blue-100 transition duration-300 flex items-center space-x-2">
-                        <i class="fas fa-home"></i>
-                        <span>Home</span>
+    
+                <!-- Compact Desktop Navigation -->
+                <div class="hidden md:flex items-center space-x-1">
+                    <a href="/" class="nav-pill text-white/90 hover:text-white px-3 py-2 text-sm rounded-lg transition-all duration-300 flex items-center space-x-2">
+                        <i class="fas fa-briefcase text-sm"></i>
+                        <span>Apply Now</span>
                     </a>
-                    <a href="#" class="nav-link text-white hover:text-blue-100 transition duration-300 flex items-center space-x-2">
-                        <i class="fas fa-video"></i>
+                    <a href="#" class="nav-pill text-white/90 hover:text-white px-3 py-2 text-sm rounded-lg transition-all duration-300 flex items-center space-x-2">
+                        <i class="fas fa-video text-sm"></i>
                         <span>Interviews</span>
                     </a>
-                    <a href="#" class="nav-link text-white hover:text-blue-100 transition duration-300 flex items-center space-x-2">
-                        <i class="fas fa-chart-line"></i>
+                    <a href="#" class="nav-pill text-white/90 hover:text-white px-3 py-2 text-sm rounded-lg transition-all duration-300 flex items-center space-x-2">
+                        <i class="fas fa-chart-line text-sm"></i>
                         <span>Dashboard</span>
                     </a>
+                    
+                    <!-- User Profile Button -->
+                    <button class="glass-effect ml-2 p-1.5 rounded-lg hover:bg-white/10 transition-all duration-300 group">
+                        <i class="fas fa-user text-sm text-white group-hover:scale-110 transform transition-transform duration-300"></i>
+                    </button>
                 </div>
-
-                <!-- Mobile Menu Button -->
+    
+                <!-- Compact Mobile Menu Button -->
                 <div class="md:hidden">
-                    <button class="text-white hover:text-blue-100 focus:outline-none">
-                        <i class="fas fa-bars text-xl"></i>
+                    <button class="p-1.5 rounded-lg text-white hover:bg-white/10 transition-all duration-300">
+                        <i class="fas fa-bars text-sm"></i>
                     </button>
                 </div>
             </div>
         </div>
     </nav>
-
-    <!-- Mobile Navigation Menu (Hidden by default) -->
-    <div class="md:hidden hidden bg-blue-800 shadow-lg" id="mobile-menu">
-        <div class="px-4 py-2 space-y-2">
-            <a href="/" class="block text-white hover:bg-blue-700 px-3 py-2 rounded-md">
-                <i class="fas fa-home mr-2"></i>Home
-            </a>
-            <a href="#" class="block text-white hover:bg-blue-700 px-3 py-2 rounded-md">
-                <i class="fas fa-video mr-2"></i>Interviews
-            </a>
-            <a href="#" class="block text-white hover:bg-blue-700 px-3 py-2 rounded-md">
-                <i class="fas fa-chart-line mr-2"></i>Dashboard
-            </a>
+    
+    <!-- Updated Mobile Menu with Blur Effect -->
+    <div class="md:hidden hidden transform transition-all duration-300 ease-in-out" id="mobile-menu">
+        <div class="nav-blur shadow-lg border-b border-white/10">
+            <div class="px-4 py-2 space-y-1">
+                <a href="/" class="nav-pill flex items-center text-sm text-white/90 hover:text-white px-3 py-2 rounded-lg transition-all duration-300">
+                    <i class="fas fa-briefcase w-5"></i>
+                    <span>Apply Now</span>
+                </a>
+                <a href="#" class="nav-pill flex items-center text-sm text-white/90 hover:text-white px-3 py-2 rounded-lg transition-all duration-300">
+                    <i class="fas fa-video w-5"></i>
+                    <span>Interviews</span>
+                </a>
+                <a href="#" class="nav-pill flex items-center text-sm text-white/90 hover:text-white px-3 py-2 rounded-lg transition-all duration-300">
+                    <i class="fas fa-chart-line w-5"></i>
+                    <span>Dashboard</span>
+                </a>
+                <hr class="border-white/10 my-2">
+                <a href="#" class="nav-pill flex items-center text-sm text-white/90 hover:text-white px-3 py-2 rounded-lg transition-all duration-300">
+                    <i class="fas fa-user w-5"></i>
+                    <span>Profile</span>
+                </a>
+            </div>
         </div>
     </div>
 
-    <!-- Main Content -->
+    <!-- Main Content with Modern Container -->
     <main class="flex-grow container mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <!-- Page Header -->
+        <!-- Dynamic Page Header -->
         <div class="mb-8">
             {% block header %}{% endblock %}
         </div>
 
-        <!-- Content Area -->
-        <div class="bg-white rounded-xl shadow-lg p-6 transition-all duration-300 hover:shadow-xl">
+        <!-- Content Area with Glass Effect -->
+        <div class="bg-white backdrop-blur-lg bg-opacity-70 rounded-2xl shadow-lg p-6 transition-all duration-300 hover:shadow-xl border border-gray-100">
             {% block content %}{% endblock %}
         </div>
     </main>
 
-    <!-- Footer -->
-    <footer class="bg-gray-800 text-gray-300 mt-auto">
-        <div class="container mx-auto px-4 sm:px-6 lg:px-8 py-6">
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+    <!-- Modern Footer -->
+    <footer class="bg-gradient-to-br from-gray-900 to-gray-800 text-gray-300">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-12">
                 <!-- Company Info -->
-                <div>
-                    <h3 class="text-lg font-semibold mb-4">Virtual HR</h3>
-                    <p class="text-sm text-gray-400">
-                        Transforming the hiring process with AI-powered video interviews.
+                <div class="space-y-4">
+                    <div class="flex items-center space-x-3">
+                        <div class="glass-effect p-2 rounded-lg">
+                            <i class="fas fa-users-gear text-xl text-white"></i>
+                        </div>
+                        <h3 class="text-xl font-semibold text-white">Virtual<span class="text-indigo-400">HR</span></h3>
+                    </div>
+                    <p class="text-sm text-gray-400 leading-relaxed">
+                        Revolutionizing hiring through AI-powered video interviews. Making recruitment smarter, faster, and more efficient.
                     </p>
                 </div>
 
                 <!-- Quick Links -->
-                <div>
-                    <h3 class="text-lg font-semibold mb-4">Quick Links</h3>
-                    <ul class="space-y-2 text-sm">
-                        <li><a href="#" class="hover:text-white transition duration-300">About Us</a></li>
-                        <li><a href="#" class="hover:text-white transition duration-300">Contact</a></li>
-                        <li><a href="#" class="hover:text-white transition duration-300">Privacy Policy</a></li>
+                <div class="space-y-4">
+                    <h3 class="text-lg font-semibold text-white">Quick Links</h3>
+                    <ul class="space-y-3 text-sm">
+                        <li>
+                            <a href="#" class="flex items-center text-gray-400 hover:text-white transition-colors duration-300">
+                                <i class="fas fa-chevron-right text-xs mr-2"></i>
+                                About Us
+                            </a>
+                        </li>
+                        <li>
+                            <a href="#" class="flex items-center text-gray-400 hover:text-white transition-colors duration-300">
+                                <i class="fas fa-chevron-right text-xs mr-2"></i>
+                                Contact
+                            </a>
+                        </li>
+                        <li>
+                            <a href="#" class="flex items-center text-gray-400 hover:text-white transition-colors duration-300">
+                                <i class="fas fa-chevron-right text-xs mr-2"></i>
+                                Privacy Policy
+                            </a>
+                        </li>
                     </ul>
                 </div>
 
                 <!-- Social Links -->
-                <div>
-                    <h3 class="text-lg font-semibold mb-4">Connect With Us</h3>
+                <div class="space-y-4">
+                    <h3 class="text-lg font-semibold text-white">Connect With Us</h3>
                     <div class="flex space-x-4">
-                        <a href="#" class="hover:text-white transition duration-300 transform hover:scale-110">
-                            <i class="fab fa-linkedin text-xl"></i>
+                        <a href="#" class="glass-effect p-3 rounded-lg hover:bg-indigo-500 transition-all duration-300 group">
+                            <i class="fab fa-linkedin text-xl text-white group-hover:scale-110 transform transition-transform duration-300"></i>
                         </a>
-                        <a href="#" class="hover:text-white transition duration-300 transform hover:scale-110">
-                            <i class="fab fa-github text-xl"></i>
+                        <a href="#" class="glass-effect p-3 rounded-lg hover:bg-indigo-500 transition-all duration-300 group">
+                            <i class="fab fa-github text-xl text-white group-hover:scale-110 transform transition-transform duration-300"></i>
                         </a>
-                        <a href="#" class="hover:text-white transition duration-300 transform hover:scale-110">
-                            <i class="fab fa-twitter text-xl"></i>
+                        <a href="#" class="glass-effect p-3 rounded-lg hover:bg-indigo-500 transition-all duration-300 group">
+                            <i class="fab fa-twitter text-xl text-white group-hover:scale-110 transform transition-transform duration-300"></i>
                         </a>
                     </div>
                 </div>
             </div>
 
-            <!-- Copyright -->
-            <div class="mt-8 pt-6 border-t border-gray-700 flex flex-col md:flex-row justify-between items-center">
-                <div class="text-sm">
-                    © {% now "Y" %} Virtual HR. All rights reserved.
-                </div>
-                <div class="text-sm text-gray-400 mt-4 md:mt-0">
-                    Made with <i class="fas fa-heart text-red-500"></i> for better hiring
+            <!-- Modern Copyright Section -->
+            <div class="mt-12 pt-8 border-t border-gray-700">
+                <div class="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
+                    <div class="text-sm text-gray-400">
+                        © {% now "Y" %} VirtualHR. All rights reserved.
+                    </div>
+                    <div class="text-sm text-gray-400 flex items-center space-x-2">
+                        <span>Made with</span>
+                        <i class="fas fa-heart text-red-500 animate-pulse"></i>
+                        <span>for better hiring</span>
+                    </div>
                 </div>
             </div>
         </div>
     </footer>
 
-    <!-- Mobile Menu Toggle Script -->
+    <!-- Enhanced Mobile Menu Toggle Script -->
     <script>
         document.querySelector('.md\\:hidden button').addEventListener('click', function() {
             const mobileMenu = document.getElementById('mobile-menu');
             mobileMenu.classList.toggle('hidden');
+            mobileMenu.classList.toggle('slide-in-top');
         });
     </script>
 </body>

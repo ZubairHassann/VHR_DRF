@@ -31,7 +31,6 @@ def index(request):
             positions = requests.get(f"{BACKEND_API_URL}/positions/").json()
             return render(request, "frontend/index.html", {"positions": positions, "error": error_message}) # Pass error
 
-
         # Step 2: Create a new applicant if they don't exist (or if no existing applicant found for SAME email AND position)
         response = requests.post(
             f"{BACKEND_API_URL}/applicants/",
@@ -49,7 +48,6 @@ def index(request):
             error_detail = response.json() if response.headers['content-type'] == 'application/json' else response.text
             print(f"Backend API Error creating applicant. Status Code: {response.status_code}, Detail: {error_detail}")
             error_message = f"Failed to create application. Please try again. (Error: {response.status_code})" # Generic error for user
-
 
     # Fetch positions from backend API (for GET request and for POST failures to re-render form)
     positions = requests.get(f"{BACKEND_API_URL}/positions/").json()

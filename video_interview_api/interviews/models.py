@@ -7,16 +7,26 @@ class Position(models.Model):
         return self.name
 
 class Applicant(models.Model):
+    STATUS_CHOICES = [
+        ('Pending', 'Pending'),
+        ('Selected', 'Selected'),
+        ('Rejected', 'Rejected'),
+    ]
     fullname = models.CharField(max_length=255)
-    email = models.EmailField(unique=True)
+    email = models.EmailField()
     position = models.ForeignKey(Position, on_delete=models.CASCADE, related_name="applicants")
+    status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='Pending')
+
+    class Meta:
+        unique_together = ('email', 'position')
 
     def __str__(self):
         return self.fullname
-
+    
 class Question(models.Model):
     text = models.TextField()
     positions = models.ManyToManyField(Position, related_name="questions")
+    time_limit = models.IntegerField(default=60)  # Time limit in seconds
 
     def __str__(self):
         return self.text[:50]
