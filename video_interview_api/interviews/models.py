@@ -1,4 +1,5 @@
 from django.db import models
+from django.contrib.auth.models import User
 
 class Position(models.Model):
     name = models.CharField(max_length=255, unique=True)
@@ -12,6 +13,7 @@ class Applicant(models.Model):
         ('Selected', 'Selected'),
         ('Rejected', 'Rejected'),
     ]
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="applicants", null=True, blank=True)
     fullname = models.CharField(max_length=255)
     email = models.EmailField()
     position = models.ForeignKey(Position, on_delete=models.CASCADE, related_name="applicants")

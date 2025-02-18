@@ -1,5 +1,11 @@
 from rest_framework import serializers
 from .models import Applicant, Position, Question, ApplicantResponse
+from django.contrib.auth.models import User
+
+class UserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ['id', 'username', 'email']
 
 class PositionSerializer(serializers.ModelSerializer):
     class Meta:

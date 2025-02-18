@@ -1,0 +1,30 @@
+<!-- filepath: video_interview_ui/frontend/templates/frontend/interviews.html -->
+
+{% extends 'base.html' %}
+
+{% block title %}Interviews{% endblock %}
+
+{% block content %}
+<div class="min-h-screen flex flex-col items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+    <div class="max-w-4xl w-full space-y-8 bg-white p-8 rounded-xl shadow-lg transform hover:shadow-2xl transition-all duration-300">
+        <div class="text-center">
+            <h2 class="text-3xl font-extrabold text-gray-900 mb-2">Interviews</h2>
+            <p class="text-sm text-gray-600">Your conducted interviews</p>
+        </div>
+
+        <div id="conducted-interviews" class="space-y-4">
+            {% if applicants %}
+                {% for applicant in applicants %}
+                    <div class="p-4 bg-gray-100 rounded-lg shadow-md">
+                        <h3 class="text-lg font-semibold text-gray-800">{{ applicant.position.name }}</h3>
+                        <p class="text-sm text-gray-600">Status: {{ applicant.status }}</p>
+                        <p class="text-sm text-gray-600">Applied on: {{ applicant.created_at }}</p>
+                    </div>
+                {% endfor %}
+            {% else %}
+                <p class="text-center text-gray-600">No interviews found.</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

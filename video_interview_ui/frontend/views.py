@@ -2,13 +2,68 @@ from django.urls import reverse
 import requests
 from django.shortcuts import render, redirect
 from django.conf import settings
-from django.contrib.admin.views.decorators import staff_member_required # For admin access control
-from django.urls import reverse
-import requests
-from django.shortcuts import render, redirect
-from django.conf import settings
+from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth.models import User
+from .decorators import login_required_custom
 
 BACKEND_API_URL = "http://127.0.0.1:8000/api"
+
+def register(request):
+    if request.method == "POST":
+        username = request.POST.get("username")
+        email = request.POST.get("email")
+        password = request.POST.get("password")
+
+        if User.objects.filter(username=username).exists():
+            return render(request, "frontend/register.html", {"error": "Username already exists."})
+
+        user = User.objects.create_user(username=username, email=email, password=password)
+        user.save()
+        return redirect(reverse("login"))
+
+    return render(request, "frontend/register.html")
+
+def login_view(request):
+    if request.method == "POST":
+        username = request.POST.get("username")
+        password = request.POST.get("password")
+
+        user = authenticate(request, username=username, password=password)
+        if user is not None:
+            login(request, user)
+            return redirect(reverse("dashboard"))
+        else:
+            return render(request, "frontend/login.html", {"error": "Invalid username or password."})
+
+    return render(request, "frontend/login.html")
+
+def logout_view(request):
+    logout(request)
+    return redirect(reverse("index"))
+
+@login_required_custom
+def dashboard(request):
+    user_email = request.user.email
+    response = requests.get(f"{BACKEND_API_URL}/applicants/?email={user_email}")
+
+    if response.status_code == 200:
+        applicants = response.json()
+    else:
+        applicants = []
+
+    return render(request, "frontend/dashboard.html", {"applicants": applicants})
+
+@login_required_custom
+def interviews(request):
+    user_email = request.user.email
+    response = requests.get(f"{BACKEND_API_URL}/applicants/?email={user_email}")
+
+    if response.status_code == 200:
+        applicants = response.json()
+    else:
+        applicants = []
+
+    return render(request, "frontend/interviews.html", {"applicants": applicants})
 
 def index(request):
     error_message = None  # Initialize error message
