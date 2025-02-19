@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Applicant, Position, Question, ApplicantResponse
+from .models import Applicant, Position, Question, ApplicantResponse, Interview
 from django.contrib.auth.models import User
 
 class UserSerializer(serializers.ModelSerializer):
@@ -30,4 +30,8 @@ class ApplicantResponseSerializer(serializers.ModelSerializer):
         model = ApplicantResponse
         fields = ['applicant', 'question', 'video_response', 'submission_time', 'status']
 
-    
+
+class InterviewSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Interview
+        fields = "__all__"    

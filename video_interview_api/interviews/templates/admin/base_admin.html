@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}VHR Admin{% endblock %}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body class="bg-gray-50">
+    <!-- Sidebar -->
+    <div class="fixed inset-y-0 left-0 w-64 bg-blue-700 text-white">
+        <div class="p-6">
+            <h1 class="text-2xl font-bold mb-8">VHR Admin</h1>
+            <nav class="space-y-4">
+                <a href="{% url 'admin_dashboard' %}" class="block py-2.5 px-4 rounded transition {% if request.resolver_match.url_name == 'admin_dashboard' %}bg-blue-800{% endif %} hover:bg-blue-800">
+                    <i class="fas fa-home mr-2"></i> Dashboard
+                </a>
+                <a href="{% url 'manage_interviews' %}" class="block py-2.5 px-4 rounded transition {% if request.resolver_match.url_name == 'manage_interviews' %}bg-blue-800{% endif %} hover:bg-blue-800">
+                    <i class="fas fa-video mr-2"></i> Interviews
+                </a>
+                <a href="{% url 'manage_applicants' %}" class="block py-2.5 px-4 rounded transition {% if request.resolver_match.url_name == 'manage_applicants' %}bg-blue-800{% endif %} hover:bg-blue-800">
+                    <i class="fas fa-users mr-2"></i> Applicants
+                </a>
+                <a href="{% url 'manage_positions' %}" class="block py-2.5 px-4 rounded transition {% if request.resolver_match.url_name == 'manage_positions' %}bg-blue-800{% endif %} hover:bg-blue-800">
+                    <i class="fas fa-briefcase mr-2"></i> Positions
+                </a>
+                <a href="{% url 'manage_questions' %}" class="block py-2.5 px-4 rounded transition {% if request.resolver_match.url_name == 'manage_questions' %}bg-blue-800{% endif %} hover:bg-blue-800">
+                    <i class="fas fa-question-circle mr-2"></i> Questions
+                </a>
+                <a href="{% url 'manage_responses' %}" class="block py-2.5 px-4 rounded transition {% if request.resolver_match.url_name == 'manage_responses' %}bg-blue-800{% endif %} hover:bg-blue-800">
+                    <i class="fas fa-reply mr-2"></i> Responses
+                </a>
+            </nav>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="ml-64 p-8">
+        <!-- Top Bar -->
+        <div class="flex justify-between items-center mb-8">
+            <h2 class="text-2xl font-bold text-gray-800">{% block page_title %}{% endblock %}</h2>
+            <div class="flex items-center space-x-4">
+                <span class="text-gray-600">Welcome, {{ request.user.username }}</span>
+                <a href="{% url 'logout' %}" class="text-red-600 hover:text-red-800">
+                    <i class="fas fa-sign-out-alt"></i> Logout
+                </a>
+            </div>
+        </div>
+
+        <!-- Content -->
+        {% block admin_content %}{% endblock %}
+    </div>
+
+    <!-- Toast Messages -->
+    <div id="toast" class="fixed bottom-4 right-4 hidden">
+        <div class="bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg">
+            <span id="toast-message"></span>
+        </div>
+    </div>
+
+    <script>
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            const toastMessage = document.getElementById('toast-message');
+            toastMessage.textContent = message;
+            toast.classList.remove('hidden');
+            setTimeout(() => {
+                toast.classList.add('hidden');
+            }, 3000);
+        }
+    </script>
+</body>
+</html>

@@ -69,178 +69,121 @@
 <body class="flex flex-col min-h-screen bg-slate-50">
 <!-- filepath: video_interview_ui/frontend/templates/base.html -->
 
-<nav class="nav-blur sticky top-0 z-50 border-b border-white/10">
-    <div class="max-w-7xl mx-auto px-4">
-        <div class="flex items-center justify-between h-14 bg-gradient-to-r from-indigo-600 to-violet-700">
-            <!-- Compact Logo -->
-            <div class="flex items-center space-x-3">
-                <div class="glass-effect p-1.5 rounded-lg transform hover:scale-105 transition-all duration-300">
-                    <i class="fas fa-users-gear text-lg text-white"></i>
-                </div>
-                <h1 class="text-xl font-bold brand-text tracking-tight">
-                    Virtual<span class="text-indigo-200">HR</span>
-                </h1>
+<nav class="nav-blur sticky top-0 z-50 border-b border-white/10 w-full">
+    <div class="flex items-center justify-between h-12 bg-gradient-to-r from-indigo-600 to-violet-700 px-4">
+        <!-- Compact Logo -->
+        <div class="flex items-center space-x-3">
+            <div class="glass-effect p-1.5 rounded-lg transform hover:scale-105 transition-all duration-300">
+                <i class="fas fa-users-gear text-lg text-white"></i>
             </div>
+            <h1 class="text-xl font-bold brand-text tracking-tight">
+                Virtual<span class="text-indigo-200">HR</span>
+            </h1>
+        </div>
 
-            <!-- Compact Desktop Navigation -->
-            <div class="hidden md:flex items-center space-x-1">
-                <a href="/" class="nav-pill text-white/90 hover:text-white px-3 py-2 text-sm rounded-lg transition-all duration-300 flex items-center space-x-2">
-                    <i class="fas fa-briefcase text-sm"></i>
-                    <span>Apply Now</span>
-                </a>
-                {% if user.is_authenticated %}
-                <a href="{% url 'interviews' %}" class="nav-pill text-white/90 hover:text-white px-3 py-2 text-sm rounded-lg transition-all duration-300 flex items-center space-x-2">
-                    <i class="fas fa-video text-sm"></i>
-                    <span>Interviews</span>
-                </a>
-                <a href="{% url 'dashboard' %}" class="nav-pill text-white/90 hover:text-white px-3 py-2 text-sm rounded-lg transition-all duration-300 flex items-center space-x-2">
-                    <i class="fas fa-chart-line text-sm"></i>
-                    <span>Dashboard</span>
-                </a>
-                <a href="{% url 'logout' %}" class="nav-pill text-white/90 hover:text-white px-3 py-2 text-sm rounded-lg transition-all duration-300 flex items-center space-x-2">
-                    <i class="fas fa-sign-out-alt text-sm"></i>
-                    <span>Logout</span>
-                </a>
-                {% else %}
-                <a href="{% url 'login' %}" class="nav-pill text-white/90 hover:text-white px-3 py-2 text-sm rounded-lg transition-all duration-300 flex items-center space-x-2">
-                    <i class="fas fa-sign-in-alt text-sm"></i>
-                    <span>Login</span>
-                </a>
-                <a href="{% url 'register' %}" class="nav-pill text-white/90 hover:text-white px-3 py-2 text-sm rounded-lg transition-all duration-300 flex items-center space-x-2">
-                    <i class="fas fa-user-plus text-sm"></i>
-                    <span>Sign Up</span>
-                </a>
-                {% endif %}
-            </div>
+        <!-- Compact Desktop Navigation -->
+        <div class="hidden md:flex items-center space-x-1">
+            <a href="/" class="nav-pill text-white/90 hover:text-white px-3 py-1 text-sm rounded-lg transition-all duration-300 flex items-center space-x-2">
+                <i class="fas fa-briefcase text-sm"></i>
+                <span>Apply Now</span>
+            </a>
+            {% if user.is_authenticated %}
+            <a href="{% url 'interviews' %}" class="nav-pill text-white/90 hover:text-white px-3 py-1 text-sm rounded-lg transition-all duration-300 flex items-center space-x-2">
+                <i class="fas fa-video text-sm"></i>
+                <span>Interviews</span>
+            </a>
+            <a href="{% url 'dashboard' %}" class="nav-pill text-white/90 hover:text-white px-3 py-1 text-sm rounded-lg transition-all duration-300 flex items-center space-x-2">
+                <i class="fas fa-chart-line text-sm"></i>
+                <span>Dashboard</span>
+            </a>
+            <a href="{% url 'logout' %}" class="nav-pill text-white/90 hover:text-white px-3 py-1 text-sm rounded-lg transition-all duration-300 flex items-center space-x-2">
+                <i class="fas fa-sign-out-alt text-sm"></i>
+                <span>Logout</span>
+            </a>
+            {% else %}
+            <a href="{% url 'login' %}" class="nav-pill text-white/90 hover:text-white px-3 py-1 text-sm rounded-lg transition-all duration-300 flex items-center space-x-2">
+                <i class="fas fa-sign-in-alt text-sm"></i>
+                <span>Login</span>
+            </a>
+            <a href="{% url 'register' %}" class="nav-pill text-white/90 hover:text-white px-3 py-1 text-sm rounded-lg transition-all duration-300 flex items-center space-x-2">
+                <i class="fas fa-user-plus text-sm"></i>
+                <span>Sign Up</span>
+            </a>
+            {% endif %}
+        </div>
 
-            <!-- Compact Mobile Menu Button -->
-            <div class="md:hidden">
-                <button class="p-1.5 rounded-lg text-white hover:bg-white/10 transition-all duration-300">
-                    <i class="fas fa-bars text-sm"></i>
-                </button>
-            </div>
+        <!-- Compact Mobile Menu Button -->
+        <div class="md:hidden">
+            <button class="p-1.5 rounded-lg text-white hover:bg-white/10 transition-all duration-300">
+                <i class="fas fa-bars text-sm"></i>
+            </button>
         </div>
     </div>
 </nav>
 
-    <!-- Animated Mobile Menu -->
-    <div class="md:hidden hidden transform transition-all duration-300 ease-in-out" id="mobile-menu">
-        <div class="bg-gradient-to-b from-indigo-600 to-violet-700 shadow-lg px-4 py-4 space-y-2">
-            <a href="/" class="block text-white hover:bg-white hover:bg-opacity-10 px-4 py-3 rounded-lg transition-all duration-300">
-                <i class="fas fa-home mr-3"></i>Home
-            </a>
-            {% if user.is_authenticated %}
-            <a href="{% url 'interviews' %}" class="block text-white hover:bg-white hover:bg-opacity-10 px-4 py-3 rounded-lg transition-all duration-300">
-                <i class="fas fa-video mr-3"></i>Interviews
-            </a>
-            <a href="{% url 'dashboard' %}" class="block text-white hover:bg-white hover:bg-opacity-10 px-4 py-3 rounded-lg transition-all duration-300">
-                <i class="fas fa-chart-line mr-3"></i>Dashboard
-            </a>
-            <a href="{% url 'logout' %}" class="block text-white hover:bg-white hover:bg-opacity-10 px-4 py-3 rounded-lg transition-all duration-300">
-                <i class="fas fa-sign-out-alt mr-3"></i>Logout
-            </a>
-            {% else %}
-            <a href="{% url 'login' %}" class="block text-white hover:bg-white hover:bg-opacity-10 px-4 py-3 rounded-lg transition-all duration-300">
-                <i class="fas fa-sign-in-alt mr-3"></i>Login
-            </a>
-            <a href="{% url 'register' %}" class="block text-white hover:bg-white hover:bg-opacity-10 px-4 py-3 rounded-lg transition-all duration-300">
-                <i class="fas fa-user-plus mr-3"></i>Sign Up
-            </a>
-            {% endif %}
-        </div>
+<!-- Animated Mobile Menu -->
+<div class="md:hidden hidden transform transition-all duration-300 ease-in-out w-full" id="mobile-menu">
+    <div class="bg-gradient-to-b from-indigo-600 to-violet-700 shadow-lg px-4 py-4 space-y-2">
+        <a href="/" class="block text-white hover:bg-white hover:bg-opacity-10 px-4 py-3 rounded-lg transition-all duration-300">
+            <i class="fas fa-home mr-3"></i>Home
+        </a>
+        {% if user.is_authenticated %}
+        <a href="{% url 'interviews' %}" class="block text-white hover:bg-white hover:bg-opacity-10 px-4 py-3 rounded-lg transition-all duration-300">
+            <i class="fas fa-video mr-3"></i>Interviews
+        </a>
+        <a href="{% url 'dashboard' %}" class="block text-white hover:bg-white hover:bg-opacity-10 px-4 py-3 rounded-lg transition-all duration-300">
+            <i class="fas fa-chart-line mr-3"></i>Dashboard
+        </a>
+        <a href="{% url 'logout' %}" class="block text-white hover:bg-white hover:bg-opacity-10 px-4 py-3 rounded-lg transition-all duration-300">
+            <i class="fas fa-sign-out-alt mr-3"></i>Logout
+        </a>
+        {% else %}
+        <a href="{% url 'login' %}" class="block text-white hover:bg-white hover:bg-opacity-10 px-4 py-3 rounded-lg transition-all duration-300">
+            <i class="fas fa-sign-in-alt mr-3"></i>Login
+        </a>
+        <a href="{% url 'register' %}" class="block text-white hover:bg-white hover:bg-opacity-10 px-4 py-3 rounded-lg transition-all duration-300">
+            <i class="fas fa-user-plus mr-3"></i>Sign Up
+        </a>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Main Content with Modern Container -->
+<main class="flex-grow container mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <!-- Dynamic Page Header -->
+    <div class="mb-8">
+        {% block header %}{% endblock %}
     </div>
 
-    <!-- Main Content with Modern Container -->
-    <main class="flex-grow container mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <!-- Dynamic Page Header -->
-        <div class="mb-8">
-            {% block header %}{% endblock %}
-        </div>
+    <!-- Content Area with Glass Effect -->
+    <div class="bg-white backdrop-blur-lg bg-opacity-70 rounded-2xl shadow-lg p-6 transition-all duration-300 hover:shadow-xl border border-gray-100">
+        {% block content %}{% endblock %}
+    </div>
+</main>
 
-        <!-- Content Area with Glass Effect -->
-        <div class="bg-white backdrop-blur-lg bg-opacity-70 rounded-2xl shadow-lg p-6 transition-all duration-300 hover:shadow-xl border border-gray-100">
-            {% block content %}{% endblock %}
-        </div>
-    </main>
-
-    <!-- Modern Footer -->
-    <footer class="bg-gradient-to-br from-gray-900 to-gray-800 text-gray-300">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-12">
-                <div class="space-y-4">
-                    <div class="flex items-center space-x-3">
-                        <h3 class="text-xl font-semibold text-white">Virtual<span class="text-indigo-400">HR</span></h3>
-                    </div>
-                    <p class="text-sm text-gray-400 leading-relaxed">
-                        Revolutionizing hiring through AI-powered video interviews. Making recruitment smarter, faster, and more efficient.
-                    </p>
-                </div>
-
-                <!-- Quick Links -->
-                <div class="space-y-4">
-                    <h3 class="text-lg font-semibold text-white">Quick Links</h3>
-                    <ul class="space-y-3 text-sm">
-                        <li>
-                            <a href="#" class="flex items-center text-gray-400 hover:text-white transition-colors duration-300">
-                                <i class="fas fa-chevron-right text-xs mr-2"></i>
-                                About Us
-                            </a>
-                        </li>
-                        <li>
-                            <a href="#" class="flex items-center text-gray-400 hover:text-white transition-colors duration-300">
-                                <i class="fas fa-chevron-right text-xs mr-2"></i>
-                                Contact
-                            </a>
-                        </li>
-                        <li>
-                            <a href="#" class="flex items-center text-gray-400 hover:text-white transition-colors duration-300">
-                                <i class="fas fa-chevron-right text-xs mr-2"></i>
-                                Privacy Policy
-                            </a>
-                        </li>
-                    </ul>
-                </div>
-
-                <!-- Social Links -->
-                <div class="space-y-4">
-                    <h3 class="text-lg font-semibold text-white">Connect With Us</h3>
-                    <div class="flex space-x-4">
-                        <a href="#" class="glass-effect p-3 rounded-lg hover:bg-indigo-500 transition-all duration-300 group">
-                            <i class="fab fa-linkedin text-xl text-white group-hover:scale-110 transform transition-transform duration-300"></i>
-                        </a>
-                        <a href="#" class="glass-effect p-3 rounded-lg hover:bg-indigo-500 transition-all duration-300 group">
-                            <i class="fab fa-github text-xl text-white group-hover:scale-110 transform transition-transform duration-300"></i>
-                        </a>
-                        <a href="#" class="glass-effect p-3 rounded-lg hover:bg-indigo-500 transition-all duration-300 group">
-                            <i class="fab fa-twitter text-xl text-white group-hover:scale-110 transform transition-transform duration-300"></i>
-                        </a>
-                    </div>
-                </div>
+<!-- Modern Footer -->
+<footer class="bg-gradient-to-br from-gray-900 to-gray-800 text-gray-300 py-4">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
+            <div class="text-sm text-gray-400">
+                © {% now "Y" %} VirtualHR. All rights reserved.
             </div>
-
-            <!-- Modern Copyright Section -->
-            <div class="mt-12 pt-8 border-t border-gray-700">
-                <div class="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
-                    <div class="text-sm text-gray-400">
-                        © {% now "Y" %} VirtualHR. All rights reserved.
-                    </div>
-                    <div class="text-sm text-gray-400 flex items-center space-x-2">
-                        <span>Made with</span>
-                        <i class="fas fa-heart text-red-500 animate-pulse"></i>
-                        <span>for better hiring</span>
-                    </div>
-                </div>
+            <div class="text-sm text-gray-400 flex items-center space-x-2">
+                <span>Made with</span>
+                <i class="fas fa-heart text-red-500 animate-pulse"></i>
+                <span>for better hiring</span>
             </div>
         </div>
-    </footer>
+    </div>
+</footer>
 
-    <!-- Enhanced Mobile Menu Toggle Script -->
-    <script>
-        document.querySelector('.md\\:hidden button').addEventListener('click', function() {
-            const mobileMenu = document.getElementById('mobile-menu');
-            mobileMenu.classList.toggle('hidden');
-            mobileMenu.classList.toggle('slide-in-top');
-        });
-    </script>
+<!-- Enhanced Mobile Menu Toggle Script -->
+<script>
+    document.querySelector('.md\\:hidden button').addEventListener('click', function() {
+        const mobileMenu = document.getElementById('mobile-menu');
+        mobileMenu.classList.toggle('hidden');
+        mobileMenu.classList.toggle('slide-in-top');
+    });
+</script>
 </body>
 </html>

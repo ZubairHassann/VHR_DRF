@@ -18,6 +18,7 @@ class Applicant(models.Model):
     email = models.EmailField()
     position = models.ForeignKey(Position, on_delete=models.CASCADE, related_name="applicants")
     status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='Pending')
+    resume = models.FileField(upload_to='resumes/', null=True, blank=True)
 
     class Meta:
         unique_together = ('email', 'position')
@@ -47,3 +48,19 @@ class ApplicantResponse(models.Model):
     
     def __str__(self):
         return f"{self.applicant.fullname} - {self.question.text[:30]}"
+
+
+class Interview(models.Model):
+    STATUS_CHOICES = [
+        ('pending', 'Pending'),
+        ('accepted', 'Accepted'),
+        ('rejected', 'Rejected'),
+    ]
+
+    title = models.CharField(max_length=255)
+    description = models.TextField()
+    scheduled_date = models.DateTimeField()
+    status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='pending')
+
+    def __str__(self):
+        return self.title

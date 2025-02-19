@@ -1,0 +1,144 @@
+{% extends "admin/base_admin.html" %}
+{% block title %}
+    {% if applicant_id %}
+        Responses for {{ responses.first.applicant.fullname }}
+    {% else %}
+        All Responses
+    {% endif %}
+{% endblock %}
+
+
+{% block page_title %}Manage Responses{% endblock %}
+
+{% block admin_content %}
+<div class="bg-white rounded-xl shadow-md overflow-hidden">
+    <!-- Filter Section -->
+    <div class="p-6 bg-gray-50 border-b">
+        <div class="flex items-center space-x-4">
+            <div class="flex-1">
+                <input type="text" id="search" placeholder="Search by applicant name..." 
+                       class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+            </div>
+            <select id="status-filter" class="px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                <option value="">All Status</option>
+                <option value="Pending">Pending</option>
+                <option value="Accepted">Accepted</option>
+                <option value="Rejected">Rejected</option>
+            </select>
+        </div>
+    </div>
+
+    <!-- Responses List -->
+    <div class="overflow-x-auto">
+        <table class="min-w-full divide-y divide-gray-200">
+            <thead class="bg-gray-50">
+                <tr>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Applicant</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Question</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Video</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                </tr>
+            </thead>
+            <tbody class="bg-white divide-y divide-gray-200">
+                {% for response in responses %}
+                <tr class="hover:bg-gray-50 transition">
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="text-sm">
+                            <div class="font-medium text-gray-900">{{ response.applicant.fullname }}</div>
+                            <div class="text-gray-500">{{ response.applicant.position.name }}</div>
+                        </div>
+                    </td>
+                    <td class="px-6 py-4">
+                        <span class="text-sm text-gray-900">{{ response.question.text|truncatechars:100 }}</span>
+                    </td>
+                    <td class="px-6 py-4">
+                        {% if response.video_response %}
+                        <video width="200" controls class="rounded">
+                            <source src="{{ response.video_response.url }}" type="video/webm">
+                            Your browser does not support the video tag.
+                        </video>
+                        {% else %}
+                        <span class="text-sm text-gray-500">No video uploaded</span>
+                        {% endif %}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <span class="px-2 py-1 text-sm rounded-full
+                            {% if response.status == 'Pending' %}bg-yellow-100 text-yellow-800
+                            {% elif response.status == 'Accepted' %}bg-green-100 text-green-800
+                            {% else %}bg-red-100 text-red-800{% endif %}">
+                            {{ response.status }}
+                        </span>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
+                        <button onclick="acceptResponse({{ response.id }})" 
+                                class="text-green-600 hover:text-green-900">
+                            <i class="fas fa-check"></i> Accept
+                        </button>
+                        <button onclick="rejectResponse({{ response.id }})"
+                                class="text-red-600 hover:text-red-900">
+                            <i class="fas fa-times"></i> Reject
+                        </button>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="5" class="px-6 py-4 text-center text-gray-500">
+                        No responses available.
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+function acceptResponse(id) {
+    updateResponseStatus(id, 'Accepted');
+}
+
+function rejectResponse(id) {
+    updateResponseStatus(id, 'Rejected');
+}
+
+function updateResponseStatus(id, status) {
+    if (confirm(`Are you sure you want to mark this response as ${status}?`)) {
+        fetch(`/api/responses/${id}/`, {
+            method: 'PATCH',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+            },
+            body: JSON.stringify({ status: status })
+        }).then(() => {
+            showToast(`Response marked as ${status}`);
+            window.location.reload();
+        });
+    }
+}
+
+// Search functionality
+document.getElementById('search').addEventListener('input', function(e) {
+    const searchText = e.target.value.toLowerCase();
+    const rows = document.querySelectorAll('tbody tr');
+    rows.forEach(row => {
+        const text = row.textContent.toLowerCase();
+        row.style.display = text.includes(searchText) ? '' : 'none';
+    });
+});
+
+// Status filter
+document.getElementById('status-filter').addEventListener('change', function(e) {
+    const status = e.target.value;
+    const rows = document.querySelectorAll('tbody tr');
+    rows.forEach(row => {
+        if (!status || row.querySelector('td:nth-child(4)').textContent.trim() === status) {
+            row.style.display = '';
+        } else {
+            row.style.display = 'none';
+        }
+    });
+});
+</script>
+{% endblock %}

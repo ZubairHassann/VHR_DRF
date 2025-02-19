@@ -1,0 +1,22 @@
+{% extends "admin/base_admin.html" %}
+{% block title %}Admin Dashboard{% endblock %}
+{% block admin_content %}
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+    <div class="bg-white p-6 rounded-lg shadow-lg">
+        <h3 class="text-xl font-semibold mb-2">Total Interviews</h3>
+        <p class="text-3xl font-bold text-blue-600">{{ total_interviews }}</p>
+    </div>
+    <div class="bg-white p-6 rounded-lg shadow-lg">
+        <h3 class="text-xl font-semibold mb-2">Total Applicants</h3>
+        <p class="text-3xl font-bold text-green-600">{{ total_applicants }}</p>
+    </div>
+    <div class="bg-white p-6 rounded-lg shadow-lg">
+        <h3 class="text-xl font-semibold mb-2">Total Positions</h3>
+        <p class="text-3xl font-bold text-purple-600">{{ total_positions }}</p>
+    </div>
+    <div class="bg-white p-6 rounded-lg shadow-lg">
+        <h3 class="text-xl font-semibold mb-2">Total Questions</h3>
+        <p class="text-3xl font-bold text-orange-600">{{ total_questions }}</p>
+    </div>
+</div>
+{% endblock %}
