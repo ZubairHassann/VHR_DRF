@@ -79,20 +79,35 @@ def user_interviews(request):
     serializer = ApplicantSerializer(applicants, many=True)
     return Response(serializer.data, status=status.HTTP_200_OK)
 
+# @api_view(['POST'])
+# @parser_classes([MultiPartParser])
+# def applicant_response_create(request):
+#     try:
+#         serializer = ApplicantResponseSerializer(data=request.data)
+#         if serializer.is_valid():
+#             serializer.save()
+#             return Response({'success': True}, status=status.HTTP_201_CREATED)
+#         else:
+#             errors = serializer.errors
+#             return Response({'success': False, 'error': errors}, status=status.HTTP_400_BAD_REQUEST)
+#     except Exception as e:
+#         return Response({'success': False, 'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
 @api_view(['POST'])
 @parser_classes([MultiPartParser])
 def applicant_response_create(request):
     try:
         serializer = ApplicantResponseSerializer(data=request.data)
         if serializer.is_valid():
-            serializer.save()
+            response = serializer.save()
+            if 'video_response' in request.FILES:
+                response.video_response = request.FILES['video_response']
+                response.save()
             return Response({'success': True}, status=status.HTTP_201_CREATED)
-        else:
-            errors = serializer.errors
-            return Response({'success': False, 'error': errors}, status=status.HTTP_400_BAD_REQUEST)
+        return Response({'success': False, 'error': serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
     except Exception as e:
         return Response({'success': False, 'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-
+    
 class PositionViewSet(viewsets.ModelViewSet):
     queryset = Position.objects.all()
     serializer_class = PositionSerializer

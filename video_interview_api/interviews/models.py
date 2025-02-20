@@ -42,7 +42,7 @@ class ApplicantResponse(models.Model):
     ]
     applicant = models.ForeignKey(Applicant, on_delete=models.CASCADE, related_name="responses")
     question = models.ForeignKey(Question, on_delete=models.CASCADE, related_name="responses")
-    video_response = models.FileField(upload_to="videos/")
+    video_response = models.FileField(upload_to='videos/', null=True, blank=True)
     submission_time = models.DateTimeField(auto_now_add=True)
     status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='Pending')
     
