@@ -5,7 +5,7 @@ from rest_framework.parsers import MultiPartParser
 from rest_framework.decorators import api_view, parser_classes
 from rest_framework.response import Response
 from rest_framework import status
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from rest_framework import viewsets, permissions
 from .models import Applicant, Interview, Position, Question, ApplicantResponse
@@ -35,6 +35,7 @@ from django.contrib import messages
 from django.http import JsonResponse
 from django.views.decorators.http import require_http_methods
 from .models import Question, Position, ApplicantResponse
+from datetime import datetime
 
 
 @api_view(['POST'])
@@ -152,7 +153,66 @@ def admin_dashboard(request):
 # @login_required
 def manage_interviews(request):
     interviews = Interview.objects.all().order_by('-scheduled_date')
-    return render(request, 'admin/manage_interviews.html', {'interviews': interviews})
+    return render(request, 'admin/manage_interviews.html', {
+        'interviews': interviews
+    })
+
+# @login_required
+@require_http_methods(["POST"])
+def add_interview(request):
+    try:
+        title = request.POST.get('title')
+        scheduled_date = request.POST.get('scheduled_date')
+        description = request.POST.get('description', '')
+
+        if title and scheduled_date:
+            Interview.objects.create(
+                title=title,
+                scheduled_date=scheduled_date,
+                description=description,
+                status='pending'
+            )
+            return JsonResponse({'message': 'Interview scheduled successfully'})
+        return JsonResponse({'error': 'Missing required fields'}, status=400)
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=400)
+
+# @login_required
+@require_http_methods(["POST"])
+def edit_interview(request, interview_id):
+    try:
+        interview = get_object_or_404(Interview, id=interview_id)
+        interview.title = request.POST.get('title', interview.title)
+        interview.scheduled_date = request.POST.get('scheduled_date', interview.scheduled_date)
+        interview.description = request.POST.get('description', interview.description)
+        interview.save()
+        return JsonResponse({'message': 'Interview updated successfully'})
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=400)
+
+# @login_required
+@require_http_methods(["DELETE"])
+def delete_interview(request, interview_id):
+    try:
+        interview = get_object_or_404(Interview, id=interview_id)
+        interview.delete()
+        return JsonResponse({'message': 'Interview deleted successfully'})
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=400)
+
+# @login_required
+@require_http_methods(["POST"])
+def update_interview_status(request, interview_id):
+    try:
+        interview = get_object_or_404(Interview, id=interview_id)
+        status = request.POST.get('status')
+        if status in ['pending', 'accepted', 'rejected']:
+            interview.status = status
+            interview.save()
+            return JsonResponse({'message': f'Interview marked as {status}'})
+        return JsonResponse({'error': 'Invalid status'}, status=400)
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=400)
 
 # @login_required
 def manage_applicants(request):

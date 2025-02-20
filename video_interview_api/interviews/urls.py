@@ -1,6 +1,6 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
-from interviews.views import add_position,PositionViewSet, ApplicantViewSet, QuestionViewSet, ApplicantResponseViewSet, InterviewViewSet, register, login_view, logout_view, user_interviews, admin_dashboard, manage_interviews, manage_applicants, manage_positions, manage_questions, manage_responses, update_response_status, add_question, edit_question, delete_question
+from interviews.views import add_interview, add_position,PositionViewSet, ApplicantViewSet, QuestionViewSet, ApplicantResponseViewSet, InterviewViewSet, register, login_view, logout_view, user_interviews, admin_dashboard, manage_interviews, manage_applicants, manage_positions, manage_questions, manage_responses, update_response_status, add_question, edit_question, delete_question, update_interview_status, edit_interview, delete_interview
 
 router = DefaultRouter()
 router.register(r'positions', PositionViewSet)
@@ -26,4 +26,9 @@ urlpatterns = [
     path('responses/', manage_responses, name='manage_responses'),
     path('responses/<int:response_id>/status/', update_response_status, name='update_response_status'),
     path('add-position/', add_position, name='add_position'),
+    path('interviews/', manage_interviews, name='manage_interviews'),
+    path('interviews/add/', add_interview, name='add_interview'),
+    path('interviews/<int:interview_id>/edit/', edit_interview, name='edit_interview'),
+    path('interviews/<int:interview_id>/delete/', delete_interview, name='delete_interview'),
+    path('interviews/<int:interview_id>/status/', update_interview_status, name='update_interview_status'),
 ]
