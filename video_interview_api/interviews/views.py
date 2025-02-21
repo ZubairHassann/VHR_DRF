@@ -1,5 +1,5 @@
 from rest_framework import viewsets, permissions
-from .models import Applicant, Interview, Position, Question, ApplicantResponse
+from .models import Applicant, Interview, Position, Question, ApplicantResponse, Candidate
 from .serializers import ApplicantSerializer, InterviewSerializer, PositionSerializer, QuestionSerializer, ApplicantResponseSerializer
 from rest_framework.parsers import MultiPartParser
 from rest_framework.decorators import api_view, parser_classes
@@ -79,19 +79,6 @@ def user_interviews(request):
     serializer = ApplicantSerializer(applicants, many=True)
     return Response(serializer.data, status=status.HTTP_200_OK)
 
-# @api_view(['POST'])
-# @parser_classes([MultiPartParser])
-# def applicant_response_create(request):
-#     try:
-#         serializer = ApplicantResponseSerializer(data=request.data)
-#         if serializer.is_valid():
-#             serializer.save()
-#             return Response({'success': True}, status=status.HTTP_201_CREATED)
-#         else:
-#             errors = serializer.errors
-#             return Response({'success': False, 'error': errors}, status=status.HTTP_400_BAD_REQUEST)
-#     except Exception as e:
-#         return Response({'success': False, 'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 @api_view(['POST'])
 @parser_classes([MultiPartParser])
@@ -163,7 +150,7 @@ def admin_dashboard(request):
         'total_positions': Position.objects.count(),
         'total_questions': Question.objects.count(),
     }
-    return render(request, 'admin/dashboard.html', context)
+    return render(request, 'admin/base_admin.html', context)
 
 # @login_required
 def manage_interviews(request):
@@ -351,3 +338,44 @@ def update_response_status(request, response_id):
         return JsonResponse({'message': f'Response marked as {status}'})
     
     return JsonResponse({'error': 'Invalid status'}, status=400)
+
+@login_required
+def candidate_interviews(request):
+    candidates = Candidate.objects.all().order_by('-application_date')
+    return render(request, 'interviews/candidate_list.html', {'candidates': candidates})
+
+
+@login_required 
+def review_interview(request, interview_id):
+    interview = get_object_or_404(Interview, id=interview_id)
+    responses = interview.responses.all().order_by('submission_time')
+    
+    if request.method == 'POST':
+        # Update response scores and feedback
+        for response in responses:
+            response.score = request.POST.get(f'score_{response.id}', 0)
+            response.feedback = request.POST.get(f'feedback_{response.id}', '')
+            response.status = request.POST.get(f'status_{response.id}', 'Pending')
+            response.save()
+            
+        # Update interview feedback and calculate overall score
+        interview.feedback = request.POST.get('interview_feedback', '')
+        interview.overall_score = sum(r.score for r in responses) / len(responses)
+        interview.status = 'reviewed'
+        interview.save()
+        
+        # Update applicant status based on overall score
+        applicant = interview.applicant
+        if interview.overall_score >= 7:
+            applicant.status = 'Selected'
+        else:
+            applicant.status = 'Rejected'
+        applicant.save()
+        
+        messages.success(request, 'Interview review saved successfully')
+        return redirect('interview_list')
+        
+    return render(request, 'interviews/review_interview.html', {
+        'interview': interview,
+        'responses': responses
+    })

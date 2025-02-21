@@ -1,0 +1,76 @@
+{% extends "base_admin.html" %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <div class="bg-white rounded-lg shadow-lg p-6">
+        <h1 class="text-2xl font-bold mb-6">Review Interview</h1>
+        
+        <!-- Candidate Info -->
+        <div class="mb-6">
+            <h2 class="text-xl font-semibold">Candidate Information</h2>
+            <p>Name: {{ interview.candidate.user.get_full_name }}</p>
+            <p>Position: {{ interview.candidate.position.title }}</p>
+            <p>Interview Date: {{ interview.scheduled_date|date:"F j, Y, g:i a" }}</p>
+        </div>
+
+        <form method="POST">
+            {% csrf_token %}
+            
+            <!-- Response Review -->
+            <div class="space-y-6">
+                {% for response in responses %}
+                <div class="border p-4 rounded">
+                    <h3 class="font-semibold mb-2">Question {{ forloop.counter }}</h3>
+                    <p class="mb-2">{{ response.question.text }}</p>
+                    
+                    {% if response.video_response %}
+                    <video width="400" controls class="mb-4">
+                        <source src="{{ response.video_response.url }}" type="video/webm">
+                        Your browser does not support the video tag.
+                    </video>
+                    {% endif %}
+                    
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium">Score (0-10)</label>
+                            <input type="number" name="score_{{ response.id }}" 
+                                   value="{{ response.score }}" min="0" max="10"
+                                   class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium">Feedback</label>
+                            <textarea name="feedback_{{ response.id }}" rows="2"
+                                      class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">{{ response.feedback }}</textarea>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+
+            <!-- Overall Feedback -->
+            <div class="mt-6">
+                <label class="block text-sm font-medium">Overall Interview Feedback</label>
+                <textarea name="interview_feedback" rows="4"
+                          class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">{{ interview.feedback }}</textarea>
+            </div>
+
+            <!-- Candidate Status -->
+            <div class="mt-6">
+                <label class="block text-sm font-medium">Update Candidate Status</label>
+                <select name="candidate_status" class="mt-1 block rounded-md border-gray-300 shadow-sm">
+                    <option value="">Keep current status</option>
+                    <option value="selected">Select Candidate</option>
+                    <option value="rejected">Reject Candidate</option>
+                </select>
+            </div>
+
+            <!-- Submit -->
+            <div class="mt-6">
+                <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">
+                    Save Review
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
