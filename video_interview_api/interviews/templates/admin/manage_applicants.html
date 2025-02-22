@@ -80,9 +80,54 @@
 </div>
 
 <script>
-function viewResponses(id) {
-    window.location.href = `/admin/responses/?applicant=${id}`;
-}
+    function viewResponses(id) {
+        window.location.href = `/admin/responses/?applicant=${id}`;
+    }
+
+    function updateStatus(id, status) {
+        if (confirm(`Are you sure you want to mark this applicant as ${status}?`)) {
+            fetch(`/api/applicants/${id}/`, {
+                method: 'PATCH',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                },
+                body: JSON.stringify({ status: status })
+            }).then(response => {
+                if (response.ok) {
+                    showToast(`Applicant marked as ${status}`);
+                    window.location.reload();
+                } else {
+                    response.json().then(data => {
+                        showToast(`Error: ${data.error}`);
+                    });
+                }
+            });
+        }
+    }
+
+    // Search functionality
+    document.getElementById('search').addEventListener('input', function(e) {
+        const searchText = e.target.value.toLowerCase();
+        const rows = document.querySelectorAll('tbody tr');
+        rows.forEach(row => {
+            const text = row.textContent.toLowerCase();
+            row.style.display = text.includes(searchText) ? '' : 'none';
+        });
+    });
+
+    // Status filter
+    document.getElementById('status-filter').addEventListener('change', function(e) {
+        const status = e.target.value;
+        const rows = document.querySelectorAll('tbody tr');
+        rows.forEach(row => {
+            if (!status || row.querySelector('td:nth-child(4)').textContent.trim() === status) {
+                row.style.display = '';
+            } else {
+                row.style.display = 'none';
+            }
+        });
+    });
 
 function updateStatus(id, status) {
     if (confirm(`Are you sure you want to mark this applicant as ${status}?`)) {
@@ -93,34 +138,18 @@ function updateStatus(id, status) {
                 'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
             },
             body: JSON.stringify({ status: status })
-        }).then(() => {
-            showToast(`Applicant marked as ${status}`);
-            window.location.reload();
+        }).then(response => {
+            if (response.ok) {
+                showToast(`Applicant marked as ${status}`);
+                window.location.reload();
+            } else {
+                response.json().then(data => {
+                    showToast(`Error: ${data.error}`);
+                });
+            }
         });
     }
 }
 
-// Search functionality
-document.getElementById('search').addEventListener('input', function(e) {
-    const searchText = e.target.value.toLowerCase();
-    const rows = document.querySelectorAll('tbody tr');
-    rows.forEach(row => {
-        const text = row.textContent.toLowerCase();
-        row.style.display = text.includes(searchText) ? '' : 'none';
-    });
-});
-
-// Status filter
-document.getElementById('status-filter').addEventListener('change', function(e) {
-    const status = e.target.value;
-    const rows = document.querySelectorAll('tbody tr');
-    rows.forEach(row => {
-        if (!status || row.querySelector('td:nth-child(4)').textContent.trim() === status) {
-            row.style.display = '';
-        } else {
-            row.style.display = 'none';
-        }
-    });
-});
 </script>
 {% endblock %}

@@ -1,41 +1,30 @@
-from rest_framework import viewsets, permissions
-from .models import Applicant, Interview, Position, Question, ApplicantResponse
-from .serializers import ApplicantSerializer, InterviewSerializer, PositionSerializer, QuestionSerializer, ApplicantResponseSerializer
-from rest_framework.parsers import MultiPartParser
-from rest_framework.decorators import api_view, parser_classes
-from rest_framework.response import Response
-from rest_framework import status
-from django.shortcuts import render, redirect, get_object_or_404
-from django.contrib.auth.decorators import login_required
-from rest_framework import viewsets, permissions
-from .models import Applicant, Interview, Position, Question, ApplicantResponse
-from .serializers import ApplicantSerializer, InterviewSerializer, PositionSerializer, QuestionSerializer, ApplicantResponseSerializer
-from rest_framework.parsers import MultiPartParser
-from .models import Question
-from .models import ApplicantResponse
-from rest_framework.decorators import api_view, parser_classes
-from rest_framework.response import Response
-from rest_framework import status
-from .serializers import ApplicantResponseSerializer 
-from rest_framework.parsers import MultiPartParser, FormParser
-from rest_framework import viewsets, permissions, serializers
-from .models import Applicant, Position, Question, ApplicantResponse
-from .serializers import ApplicantSerializer, PositionSerializer, QuestionSerializer, ApplicantResponseSerializer
-from rest_framework import generics
-from rest_framework.response import Response
-from rest_framework.decorators import api_view
-from django.contrib.auth.models import User
-from django.contrib.auth import authenticate, login, logout
-from rest_framework.decorators import api_view
-from rest_framework.response import Response
-from rest_framework import status
-from django.shortcuts import render, redirect, get_object_or_404
-from django.contrib.auth.decorators import login_required
-from django.contrib import messages
-from django.http import JsonResponse
-from django.views.decorators.http import require_http_methods
-from .models import Question, Position, ApplicantResponse
 from datetime import datetime
+import json
+
+from django.contrib import messages
+from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth.decorators import login_required
+from django.contrib.auth.models import User
+from django.http import JsonResponse
+from django.shortcuts import get_object_or_404, redirect, render
+from django.utils.decorators import method_decorator
+from django.views import View
+from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.http import require_http_methods
+
+from rest_framework import generics, permissions, serializers, status, viewsets
+from rest_framework.decorators import api_view, parser_classes
+from rest_framework.parsers import FormParser, MultiPartParser
+from rest_framework.response import Response
+
+from .models import Applicant, ApplicantResponse, Interview, Position, Question
+from .serializers import (
+    ApplicantResponseSerializer,
+    ApplicantSerializer,
+    InterviewSerializer,
+    PositionSerializer,
+    QuestionSerializer,
+)
 
 
 @api_view(['POST'])
@@ -351,3 +340,22 @@ def update_response_status(request, response_id):
         return JsonResponse({'message': f'Response marked as {status}'})
     
     return JsonResponse({'error': 'Invalid status'}, status=400)
+
+
+@method_decorator(csrf_exempt, name='dispatch')
+class ApplicantUpdateView(View):
+    def patch(self, request, id):
+        try:
+            applicant = Applicant.objects.get(id=id)
+            data = json.loads(request.body)
+            status = data.get('status')
+            if status in ['Pending', 'Selected', 'Rejected']:
+                applicant.status = status
+                applicant.save()
+                return JsonResponse({'message': 'Applicant status updated successfully'}, status=200)
+            else:
+                return JsonResponse({'error': 'Invalid status'}, status=400)
+        except Applicant.DoesNotExist:
+            return JsonResponse({'error': 'Applicant not found'}, status=404)
+        except Exception as e:
+            return JsonResponse({'error': str(e)}, status=500)

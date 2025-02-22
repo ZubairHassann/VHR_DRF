@@ -13,7 +13,7 @@ from interviews.views import (
     logout_view,
     user_interviews,
     admin_dashboard,
-    manage_interviews,  # Ensure this is included
+    manage_interviews,  
     manage_applicants,
     manage_positions,
     manage_questions,
@@ -25,6 +25,7 @@ from interviews.views import (
     update_interview_status,
     edit_interview,
     delete_interview,
+    ApplicantUpdateView
 )
 
 # API Router Setup
@@ -69,4 +70,5 @@ urlpatterns = [
     # Responses Management
     path('responses/', manage_responses, name='manage_responses'),
     path('responses/<int:response_id>/status/', update_response_status, name='update_response_status'),
+    path('applicants/<int:id>/', ApplicantUpdateView.as_view(), name='applicant_update'),
 ]

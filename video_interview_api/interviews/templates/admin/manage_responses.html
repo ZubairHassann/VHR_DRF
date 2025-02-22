@@ -7,7 +7,6 @@
     {% endif %}
 {% endblock %}
 
-
 {% block page_title %}Manage Responses{% endblock %}
 
 {% block admin_content %}
@@ -94,51 +93,57 @@
 </div>
 
 <script>
-function acceptResponse(id) {
-    updateResponseStatus(id, 'Accepted');
-}
-
-function rejectResponse(id) {
-    updateResponseStatus(id, 'Rejected');
-}
-
-function updateResponseStatus(id, status) {
-    if (confirm(`Are you sure you want to mark this response as ${status}?`)) {
-        fetch(`/api/responses/${id}/`, {
-            method: 'PATCH',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
-            },
-            body: JSON.stringify({ status: status })
-        }).then(() => {
-            showToast(`Response marked as ${status}`);
-            window.location.reload();
-        });
+    function acceptResponse(id) {
+        updateResponseStatus(id, 'Accepted');
     }
-}
-
-// Search functionality
-document.getElementById('search').addEventListener('input', function(e) {
-    const searchText = e.target.value.toLowerCase();
-    const rows = document.querySelectorAll('tbody tr');
-    rows.forEach(row => {
-        const text = row.textContent.toLowerCase();
-        row.style.display = text.includes(searchText) ? '' : 'none';
-    });
-});
-
-// Status filter
-document.getElementById('status-filter').addEventListener('change', function(e) {
-    const status = e.target.value;
-    const rows = document.querySelectorAll('tbody tr');
-    rows.forEach(row => {
-        if (!status || row.querySelector('td:nth-child(4)').textContent.trim() === status) {
-            row.style.display = '';
-        } else {
-            row.style.display = 'none';
+    
+    function rejectResponse(id) {
+        updateResponseStatus(id, 'Rejected');
+    }
+    
+    function updateResponseStatus(id, status) {
+        if (confirm(`Are you sure you want to mark this response as ${status}?`)) {
+            fetch(`/api/responses/${id}/status/`, {
+                method: 'PATCH',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                },
+                body: JSON.stringify({ status: status })
+            }).then(response => {
+                if (response.ok) {
+                    showToast(`Response marked as ${status}`);
+                    window.location.reload();
+                } else {
+                    response.json().then(data => {
+                        showToast(`Error: ${data.error}`);
+                    });
+                }
+            });
         }
+    }
+    
+    // Search functionality
+    document.getElementById('search').addEventListener('input', function(e) {
+        const searchText = e.target.value.toLowerCase();
+        const rows = document.querySelectorAll('tbody tr');
+        rows.forEach(row => {
+            const text = row.textContent.toLowerCase();
+            row.style.display = text.includes(searchText) ? '' : 'none';
+        });
     });
-});
+    
+    // Status filter
+    document.getElementById('status-filter').addEventListener('change', function(e) {
+        const status = e.target.value;
+        const rows = document.querySelectorAll('tbody tr');
+        rows.forEach(row => {
+            if (!status || row.querySelector('td:nth-child(4)').textContent.trim() === status) {
+                row.style.display = '';
+            } else {
+                row.style.display = 'none';
+            }
+        });
+    });
 </script>
 {% endblock %}

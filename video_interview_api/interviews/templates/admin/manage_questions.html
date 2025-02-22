@@ -131,20 +131,44 @@
 </div>
 
 <script>
-function editQuestion(id) {
-    fetch(`/api/questions/${id}/`)
-        .then(response => response.json())
-        .then(data => {
-            document.getElementById('edit_question_id').value = id;
-            document.getElementById('edit_question_text').value = data.text;
-            document.getElementById('edit_time_limit').value = data.time_limit;
-            const positionsSelect = document.getElementById('edit_positions');
-            Array.from(positionsSelect.options).forEach(option => {
-                option.selected = data.positions.includes(parseInt(option.value));
+    function editQuestion(id) {
+        fetch(`/api/questions/${id}/`)
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('edit_question_id').value = id;
+                document.getElementById('edit_question_text').value = data.text;
+                document.getElementById('edit_time_limit').value = data.time_limit;
+                const positionsSelect = document.getElementById('edit_positions');
+                Array.from(positionsSelect.options).forEach(option => {
+                    option.selected = data.positions.includes(parseInt(option.value));
+                });
+                document.getElementById('editModal').classList.remove('hidden');
             });
-            document.getElementById('editModal').classList.remove('hidden');
+    }
+    
+    document.getElementById('editForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        const id = document.getElementById('edit_question_id').value;
+        const formData = new FormData(this);
+        
+        fetch(`/api/questions/${id}/`, {
+            method: 'PATCH',
+            body: JSON.stringify(Object.fromEntries(formData)),
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+            },
+        }).then(response => {
+            if (response.ok) {
+                showToast('Question updated successfully');
+                window.location.reload();
+            } else {
+                response.json().then(data => {
+                    showToast(`Error: ${data.error}`);
+                });
+            }
         });
-}
+    });
 
 function closeEditModal() {
     document.getElementById('editModal').classList.add('hidden');

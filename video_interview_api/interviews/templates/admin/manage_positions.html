@@ -120,5 +120,38 @@ function deletePosition(id) {
         });
     }
 }
+function editPosition(id) {
+    fetch(`/api/positions/${id}/`)
+        .then(response => response.json())
+        .then(data => {
+            document.getElementById('edit_position_id').value = id;
+            document.getElementById('edit_position_name').value = data.name;
+            document.getElementById('editModal').classList.remove('hidden');
+        });
+}
+
+document.getElementById('editForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    const id = document.getElementById('edit_position_id').value;
+    const formData = new FormData(this);
+    
+    fetch(`/api/positions/${id}/`, {
+        method: 'PATCH',
+        body: JSON.stringify(Object.fromEntries(formData)),
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+        },
+    }).then(response => {
+        if (response.ok) {
+            showToast('Position updated successfully');
+            window.location.reload();
+        } else {
+            response.json().then(data => {
+                showToast(`Error: ${data.error}`);
+            });
+        }
+    });
+});
 </script>
 {% endblock %}

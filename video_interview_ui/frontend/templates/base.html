@@ -176,7 +176,7 @@
         </div>
     </div>
 </footer>
-
+</body>
 <!-- Enhanced Mobile Menu Toggle Script -->
 <script>
     document.querySelector('.md\\:hidden button').addEventListener('click', function() {
@@ -184,6 +184,14 @@
         mobileMenu.classList.toggle('hidden');
         mobileMenu.classList.toggle('slide-in-top');
     });
+
+    // Ensure links inside the mobile menu are clickable
+    document.querySelectorAll('#mobile-menu a').forEach(link => {
+        link.addEventListener('click', function() {
+            const mobileMenu = document.getElementById('mobile-menu');
+            mobileMenu.classList.add('hidden');
+            mobileMenu.classList.remove('slide-in-top');
+        });
+    });
 </script>
-</body>
 </html>
