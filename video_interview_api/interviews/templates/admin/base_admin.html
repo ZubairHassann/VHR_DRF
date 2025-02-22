@@ -1,3 +1,4 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -12,29 +13,26 @@
     <div class="fixed inset-y-0 left-0 w-64 bg-blue-700 text-white">
         <div class="p-6">
             <h1 class="text-2xl font-bold mb-8">VHR Admin</h1>
-        <nav class="space-y-4">
-            <a href="{% url 'admin_dashboard' %}" class="block py-2.5 px-4 rounded transition {% if request.resolver_match.url_name == 'admin_dashboard' %}bg-blue-800{% endif %} hover:bg-blue-800">
-                <i class="fas fa-home mr-2"></i> Dashboard
-            </a>
-            <a href="{% url 'manage_interviews' %}" class="block py-2.5 px-4 rounded transition {% if request.resolver_match.url_name == 'manage_interviews' %}bg-blue-800{% endif %} hover:bg-blue-800">
-                <i class="fas fa-video mr-2"></i> Interviews
-            </a>
-            <a href="{% url 'candidate_interviews' %}" class="block py-2.5 px-4 rounded transition {% if request.resolver_match.url_name == 'candidate_interviews' %}bg-blue-800{% endif %} hover:bg-blue-800">
-                <i class="fas fa-user-check mr-2"></i> Review Interviews
-            </a>
-            <a href="{% url 'manage_applicants' %}" class="block py-2.5 px-4 rounded transition {% if request.resolver_match.url_name == 'manage_applicants' %}bg-blue-800{% endif %} hover:bg-blue-800">
-                <i class="fas fa-users mr-2"></i> Applicants
-            </a>
-            <a href="{% url 'manage_positions' %}" class="block py-2.5 px-4 rounded transition {% if request.resolver_match.url_name == 'manage_positions' %}bg-blue-800{% endif %} hover:bg-blue-800">
-                <i class="fas fa-briefcase mr-2"></i> Positions
-            </a>
-            <a href="{% url 'manage_questions' %}" class="block py-2.5 px-4 rounded transition {% if request.resolver_match.url_name == 'manage_questions' %}bg-blue-800{% endif %} hover:bg-blue-800">
-                <i class="fas fa-question-circle mr-2"></i> Questions
-            </a>
-            <a href="{% url 'manage_responses' %}" class="block py-2.5 px-4 rounded transition {% if request.resolver_match.url_name == 'manage_responses' %}bg-blue-800{% endif %} hover:bg-blue-800">
-                <i class="fas fa-reply mr-2"></i> Responses
-            </a>
-        </nav>
+            <nav class="space-y-4">
+                <a href="{% url 'admin_dashboard' %}" class="block py-2.5 px-4 rounded transition {% if request.resolver_match.url_name == 'admin_dashboard' %}bg-blue-800{% endif %} hover:bg-blue-800">
+                    <i class="fas fa-home mr-2"></i> Dashboard
+                </a>
+                <a href="{% url 'manage_interviews' %}" class="block py-2.5 px-4 rounded transition {% if request.resolver_match.url_name == 'manage_interviews' %}bg-blue-800{% endif %} hover:bg-blue-800">
+                    <i class="fas fa-video mr-2"></i> Interviews
+                </a>
+                <a href="{% url 'manage_applicants' %}" class="block py-2.5 px-4 rounded transition {% if request.resolver_match.url_name == 'manage_applicants' %}bg-blue-800{% endif %} hover:bg-blue-800">
+                    <i class="fas fa-users mr-2"></i> Applicants
+                </a>
+                <a href="{% url 'manage_positions' %}" class="block py-2.5 px-4 rounded transition {% if request.resolver_match.url_name == 'manage_positions' %}bg-blue-800{% endif %} hover:bg-blue-800">
+                    <i class="fas fa-briefcase mr-2"></i> Positions
+                </a>
+                <a href="{% url 'manage_questions' %}" class="block py-2.5 px-4 rounded transition {% if request.resolver_match.url_name == 'manage_questions' %}bg-blue-800{% endif %} hover:bg-blue-800">
+                    <i class="fas fa-question-circle mr-2"></i> Questions
+                </a>
+                <a href="{% url 'manage_responses' %}" class="block py-2.5 px-4 rounded transition {% if request.resolver_match.url_name == 'manage_responses' %}bg-blue-800{% endif %} hover:bg-blue-800">
+                    <i class="fas fa-reply mr-2"></i> Responses
+                </a>
+            </nav>
         </div>
     </div>
 

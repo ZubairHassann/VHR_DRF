@@ -2,12 +2,10 @@ from django.db import models
 from django.contrib.auth.models import User
 
 class Position(models.Model):
-    title = models.CharField(max_length=200)
-    description = models.TextField()
-    created_at = models.DateTimeField(auto_now_add=True)
-    
+    name = models.CharField(max_length=255, unique=True)
+
     def __str__(self):
-        return self.title
+        return self.name
 
 class Applicant(models.Model):
     STATUS_CHOICES = [
@@ -36,41 +34,33 @@ class Question(models.Model):
     def __str__(self):
         return self.text[:50]
 
+class ApplicantResponse(models.Model):
+    STATUS_CHOICES = [
+        ('Pending', 'Pending'),
+        ('Accepted', 'Accepted'),
+        ('Rejected', 'Rejected'),
+    ]
+    applicant = models.ForeignKey(Applicant, on_delete=models.CASCADE, related_name="responses")
+    question = models.ForeignKey(Question, on_delete=models.CASCADE, related_name="responses")
+    video_response = models.FileField(upload_to='videos/', null=True, blank=True)
+    submission_time = models.DateTimeField(auto_now_add=True)
+    status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='Pending')
+    
+    def __str__(self):
+        return f"{self.applicant.fullname} - {self.question.text[:30]}"
+
+
 class Interview(models.Model):
     STATUS_CHOICES = [
         ('pending', 'Pending'),
-        ('completed', 'Completed'), 
-        ('reviewed', 'Reviewed')
+        ('accepted', 'Accepted'),
+        ('rejected', 'Rejected'),
     ]
-    
-    applicant = models.ForeignKey('Applicant', on_delete=models.CASCADE, related_name='interviews')
+
     title = models.CharField(max_length=255)
     description = models.TextField()
     scheduled_date = models.DateTimeField()
     status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='pending')
-    feedback = models.TextField(blank=True)
-    overall_score = models.IntegerField(default=0)
 
     def __str__(self):
-        return f"{self.title} - {self.applicant.fullname}"
-    
-    
-class ApplicantResponse(models.Model):
-    STATUS_CHOICES = [
-        ('Pending', 'Pending'),
-        ('Accepted', 'Accepted'), 
-        ('Rejected', 'Rejected')
-    ]
-    
-    interview = models.ForeignKey(Interview, on_delete=models.CASCADE, related_name='responses')
-    applicant = models.ForeignKey('Applicant', on_delete=models.CASCADE, related_name="responses")
-    question = models.ForeignKey('Question', on_delete=models.CASCADE, related_name="responses")
-    video_response = models.FileField(upload_to='videos/', null=True, blank=True)
-    submission_time = models.DateTimeField(auto_now_add=True)  
-    status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='Pending')
-    feedback = models.TextField(blank=True)
-    score = models.IntegerField(default=0)
-
-    def __str__(self):
-        return f"{self.applicant.fullname} - {self.question.text[:30]}"
-
+        return self.title

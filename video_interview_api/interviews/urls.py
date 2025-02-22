@@ -1,21 +1,19 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 from interviews.views import (
-    add_interview, 
+    add_interview,
     add_position,
-    PositionViewSet, 
-    ApplicantViewSet, 
-    QuestionViewSet, 
-    ApplicantResponseViewSet, 
+    PositionViewSet,
+    ApplicantViewSet,
+    QuestionViewSet,
+    ApplicantResponseViewSet,
     InterviewViewSet,
-    candidate_interviews,
     register,
     login_view,
     logout_view,
-    review_interview,
     user_interviews,
     admin_dashboard,
-    manage_interviews,
+    manage_interviews,  # Ensure this is included
     manage_applicants,
     manage_positions,
     manage_questions,
@@ -26,7 +24,7 @@ from interviews.views import (
     delete_question,
     update_interview_status,
     edit_interview,
-    delete_interview
+    delete_interview,
 )
 
 # API Router Setup
@@ -48,6 +46,13 @@ urlpatterns = [
     # Admin Dashboard
     path('dashboard/', admin_dashboard, name='admin_dashboard'),
 
+    # Interview Management
+    path('interviews/', manage_interviews, name='manage_interviews'),  # Ensure this is defined
+    path('interviews/add/', add_interview, name='add_interview'),
+    path('interviews/<int:interview_id>/edit/', edit_interview, name='edit_interview'),
+    path('interviews/<int:interview_id>/delete/', delete_interview, name='delete_interview'),
+    path('interviews/<int:interview_id>/status/', update_interview_status, name='update_interview_status'),
+
     # Positions Management
     path('positions/', manage_positions, name='manage_positions'),
     path('positions/add/', add_position, name='add_position'),
@@ -64,15 +69,4 @@ urlpatterns = [
     # Responses Management
     path('responses/', manage_responses, name='manage_responses'),
     path('responses/<int:response_id>/status/', update_response_status, name='update_response_status'),
-
-    # Interviews Management
-    path('interviews/', manage_interviews, name='manage_interviews'),
-    path('interviews/add/', add_interview, name='add_interview'),
-    path('interviews/<int:interview_id>/edit/', edit_interview, name='edit_interview'),
-    path('interviews/<int:interview_id>/delete/', delete_interview, name='delete_interview'),
-    path('interviews/<int:interview_id>/status/', update_interview_status, name='update_interview_status'),
-
-    # Interview Review System
-    path('candidates/', candidate_interviews, name='candidate_interviews'),
-    path('interview/review/<int:interview_id>/', review_interview, name='review_interview'),
 ]

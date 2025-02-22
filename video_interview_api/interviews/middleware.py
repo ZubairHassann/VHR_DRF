@@ -6,6 +6,6 @@ class StaffRequiredMiddleware:
         self.get_response = get_response
 
     def __call__(self, request):
-        if request.path.startswith('/admin/') and not request.user.is_staff:
-            return redirect('login')
+        # if request.path.startswith('/admin/') and not request.user.is_staff:
+        #     return redirect('login')
         return self.get_response(request)
