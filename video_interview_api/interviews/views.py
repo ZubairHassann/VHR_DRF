@@ -25,6 +25,7 @@ from .serializers import (
     PositionSerializer,
     QuestionSerializer,
 )
+from django.db.models import Count
 
 
 @api_view(['POST'])
@@ -144,7 +145,7 @@ class InterviewViewSet(viewsets.ModelViewSet):
     serializer_class = InterviewSerializer
     permission_classes = [permissions.AllowAny]
 
-# @login_required
+@login_required
 def admin_dashboard(request):
     context = {
         'total_interviews': Interview.objects.count(),
@@ -363,3 +364,66 @@ def view_responses(request):
     applicant = get_object_or_404(Applicant, id=applicant_id)
     responses = ApplicantResponse.objects.filter(applicant=applicant)
     return render(request, 'admin/view_responses.html', {'applicant': applicant, 'responses': responses})
+
+
+
+
+# Add this view to list unique applicants
+@login_required
+def manage_unique_applicants(request):
+    unique_applicants = Applicant.objects.values(
+        'id',
+        'email', 
+        'position',
+        'position__name',
+        'fullname'
+    ).annotate(
+        responses_count=Count('responses')  # Changed from 'applicantresponse' to 'responses'
+    ).order_by('email')
+    return render(request, 'admin/manage_unique_applicants.html', {
+        'unique_applicants': unique_applicants
+    })
+
+# Add this view to show responses of a specific applicant
+@login_required
+def view_applicant_responses(request, email, position_id):
+    applicant = get_object_or_404(Applicant, email=email, position_id=position_id)
+    responses = applicant.responses.all()
+    
+    # Get total questions for this position using the positions field
+    total_questions = Question.objects.filter(positions=position_id).count()
+    
+    return render(request, 'admin/view_applicant_responses.html', {
+        'applicant': applicant,
+        'responses': responses,
+        'total_questions': total_questions
+    })
+
+
+@login_required
+def admin_login(request):
+    if request.user.is_authenticated and request.user.is_staff:
+        return redirect('admin_dashboard')
+        
+    if request.method == 'POST':
+        username = request.POST.get('username')
+        password = request.POST.get('password')
+        user = authenticate(request, username=username, password=password)
+        
+        if user is not None and user.is_staff:
+            login(request, user)
+            return redirect('admin_dashboard')
+        else:
+            return render(request, 'admin/login.html', {
+                'error': 'Invalid credentials or insufficient permissions'
+            })
+    
+    return render(request, 'admin/login.html')
+
+
+
+@login_required
+@require_http_methods(["GET", "POST"])
+def admin_logout(request):
+    logout(request)
+    return redirect('admin_login')

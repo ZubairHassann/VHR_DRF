@@ -2,7 +2,7 @@
 {% block content %}
 
 <div class="min-h-screen flex flex-col bg-gradient-to-b from-gray-50 to-gray-100">
-  <!-- Compact Header -->
+  <!-- Header -->
   <div class="bg-white shadow-md py-3">
     <div class="max-w-6xl mx-auto px-4">
       <div class="flex items-center justify-between">
@@ -15,6 +15,37 @@
         </div>
       </div>
     </div>
+  </div>
+
+  <!-- Navigation Bar -->
+  <div class="bg-white border-b">
+    <div class="max-w-6xl mx-auto px-4 py-3">
+      <div class="flex justify-between items-center">
+        <button 
+          onclick="skipToNext(currentQuestionIndex - 1)" 
+          id="prev-btn"
+          class="px-4 py-2 text-sm bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed"
+          {% if forloop.first %}disabled{% endif %}
+        >
+          <i class="fas fa-chevron-left mr-2"></i> Previous Question
+        </button>
+        <span id="progress-text" class="text-sm font-medium text-gray-600">
+          Question <span id="current-question">1</span> of {{ questions|length }}
+        </span>
+        <button 
+          onclick="skipToNext(currentQuestionIndex)" 
+          id="next-btn"
+          class="px-4 py-2 text-sm bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg"
+        >
+          Next Question <i class="fas fa-chevron-right ml-2"></i>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Progress Bar -->
+  <div class="w-full bg-gray-200 h-1">
+    <div id="progress-bar" class="bg-blue-600 h-1 transition-all duration-300" style="width: 0%"></div>
   </div>
 
   <!-- Main Content with Grid Layout -->
@@ -157,13 +188,35 @@
   let videoStream;
   let mediaRecorder;
   let recordedChunks = [];
+  let currentQuestionIndex = 0;
+  const totalQuestions = {{ questions|length }};
+  let isRecording = false;
+
+  // Initialize page
+  document.addEventListener('DOMContentLoaded', () => {
+    updateProgress();
+  });
+
+  function updateProgress() {
+    const progress = ((currentQuestionIndex + 1) / totalQuestions) * 100;
+    document.getElementById('progress-bar').style.width = `${progress}%`;
+    document.getElementById('current-question').textContent = currentQuestionIndex + 1;
+    
+    // Update button states
+    document.getElementById('prev-btn').disabled = currentQuestionIndex === 0 || isRecording;
+    document.getElementById('next-btn').disabled = currentQuestionIndex === totalQuestions - 1 || isRecording;
+  }
 
   async function startRecording(index, timeLimit) {
     try {
+      isRecording = true;
+      updateProgress();
+
       videoStream = await navigator.mediaDevices.getUserMedia({
         video: true,
         audio: true,
       });
+      
       let previewVideo = document.getElementById(`video-preview-${index}`);
       previewVideo.srcObject = videoStream;
       previewVideo.classList.remove("hidden");
@@ -193,6 +246,8 @@
         }
       }, 1000);
     } catch (error) {
+      isRecording = false;
+      updateProgress();
       alert("Error accessing the camera: " + error.message);
       console.error(error);
     }
@@ -201,71 +256,83 @@
   function stopRecording(index) {
     clearInterval(timer);
     document.getElementById(`timer-${index}`).classList.add("hidden");
-    mediaRecorder.stop();
-    videoStream.getTracks().forEach((track) => track.stop());
+    
+    if (mediaRecorder && mediaRecorder.state === "recording") {
+      mediaRecorder.stop();
+    }
+    
+    if (videoStream) {
+      videoStream.getTracks().forEach((track) => track.stop());
+    }
 
     let previewVideo = document.getElementById(`video-preview-${index}`);
     previewVideo.srcObject = null;
     previewVideo.classList.add("hidden");
 
     document.getElementById(`stop-btn-${index}`).classList.add("hidden");
+    isRecording = false;
+    updateProgress();
   }
 
   function showPreview(index) {
-    let blob = new Blob(recordedChunks, { type: "video/webm" });
-    let videoUrl = URL.createObjectURL(blob);
+    const blob = new Blob(recordedChunks, { type: "video/webm" });
+    const videoUrl = URL.createObjectURL(blob);
 
-    let recordedVideo = document.getElementById(`recorded-video-${index}`);
+    const recordedVideo = document.getElementById(`recorded-video-${index}`);
     recordedVideo.src = videoUrl;
     recordedVideo.classList.remove("hidden");
+    
+    // Cleanup URL after video loads
+    recordedVideo.onloadeddata = () => {
+      URL.revokeObjectURL(videoUrl);
+    };
 
     document.getElementById(`preview-actions-${index}`).classList.remove("hidden");
   }
 
   function saveRecordedVideo(index) {
-    let blob = new Blob(recordedChunks, { type: "video/webm" });
-    let formData = new FormData();
+    const blob = new Blob(recordedChunks, { type: "video/webm" });
+    const formData = new FormData();
+    
     formData.append("applicant", "{{ applicant_id }}");
-    formData.append(
-      "question",
-      document.getElementById(`question-${index}`).dataset.questionId
-    );
-    formData.append("video_response", blob, `response_${index}.webm`);
+    formData.append("question", document.getElementById(`question-${index}`).dataset.questionId);
+    formData.append("video_response", blob, "response.webm");
 
-    let csrfToken = document.querySelector("[name=csrfmiddlewaretoken]").value;
+    const csrfToken = document.querySelector("[name=csrfmiddlewaretoken]").value;
 
     fetch("http://127.0.0.1:8000/api/applicant-responses/", {
       method: "POST",
       headers: {
-        "X-CSRFToken": csrfToken,
+        "X-CSRFToken": csrfToken
       },
-      body: formData,
+      body: formData
     })
-      .then((response) => {
-        if (!response.ok) {
-          throw new Error("Network response was not ok");
-        }
-        return response.json();
-      })
-      .then((data) => {
-        if (data.success) {
-          document.getElementById(`preview-actions-${index}`).classList.add("hidden");
-          document.getElementById(`next-btn-${index}`).classList.remove("hidden");
-        } else {
-          alert("Answer Submitted, Go to next?");
-        }
-      })
-      .catch((error) => {
-        console.error("Error uploading video:", error);
-        alert("Upload failed: " + error.message);
-      })
-      .finally(() => {
-        nextQuestion(index);
-      });
+    .then(async (response) => {
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.detail || "Submission failed");
+      }
+      return response.json();
+    })
+    .then((data) => {
+      document.getElementById(`preview-actions-${index}`).classList.add("hidden");
+      skipToNext(index);
+    })
+    .catch((error) => {
+      console.error("Error details:", error);
+      alert("Upload failed: " + error.message);
+    });
   }
 
   function retryRecording(index) {
-    document.getElementById(`recorded-video-${index}`).classList.add("hidden");
+    const recordedVideo = document.getElementById(`recorded-video-${index}`);
+    
+    if (recordedVideo.src.startsWith('blob:')) {
+      URL.revokeObjectURL(recordedVideo.src);
+    }
+    
+    recordedVideo.src = '';
+    recordedVideo.classList.add("hidden");
     document.getElementById(`preview-actions-${index}`).classList.add("hidden");
     document.getElementById(`start-btn-${index}`).classList.remove("hidden");
     recordedChunks = [];
@@ -277,26 +344,43 @@
     }
 
     document.getElementById(`question-${index}`).style.display = "none";
+    currentQuestionIndex = index + 1;
 
-    let nextQuestion = document.getElementById(`question-${index + 1}`);
+    let nextQuestion = document.getElementById(`question-${currentQuestionIndex}`);
     if (nextQuestion) {
       nextQuestion.style.display = "block";
+      updateProgress();
     } else {
       alert("You have completed all questions!");
       window.location.href = "{% url 'index' %}";
     }
   }
 
-  function nextQuestion(index) {
-    document.getElementById(`question-${index}`).style.display = "none";
-
-    let nextQuestion = document.getElementById(`question-${index + 1}`);
-    if (nextQuestion) {
-      nextQuestion.style.display = "block";
-    } else {
-      alert("You have completed all questions!");
-      window.location.href = "{% url 'index' %}";
+  function resetRecordingState(index) {
+    if (mediaRecorder && mediaRecorder.state === 'recording') {
+      stopRecording(index);
     }
+
+    const recordedVideo = document.getElementById(`recorded-video-${index}`);
+    const previewVideo = document.getElementById(`video-preview-${index}`);
+    
+    if (recordedVideo.src.startsWith('blob:')) {
+      URL.revokeObjectURL(recordedVideo.src);
+    }
+    
+    recordedVideo.src = '';
+    recordedVideo.classList.add("hidden");
+    previewVideo.classList.add("hidden");
+    previewVideo.srcObject = null;
+
+    document.getElementById(`start-btn-${index}`).classList.remove("hidden");
+    document.getElementById(`stop-btn-${index}`).classList.add("hidden");
+    document.getElementById(`preview-actions-${index}`).classList.add("hidden");
+    document.getElementById(`timer-${index}`).classList.add("hidden");
+
+    recordedChunks = [];
+    isRecording = false;
+    updateProgress();
   }
 </script>
 

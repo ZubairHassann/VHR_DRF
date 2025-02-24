@@ -32,6 +32,9 @@
                 <a href="{% url 'manage_responses' %}" class="block py-2.5 px-4 rounded transition {% if request.resolver_match.url_name == 'manage_responses' %}bg-blue-800{% endif %} hover:bg-blue-800">
                     <i class="fas fa-reply mr-2"></i> Responses
                 </a>
+                <a href="{% url 'manage_unique_applicants' %}" class="block py-2.5 px-4 rounded transition {% if request.resolver_match.url_name == 'manage_unique_applicants' %}bg-blue-800{% endif %} hover:bg-blue-800">
+                    <i class="fas fa-users mr-2"></i> Unique Applicants
+                </a>
             </nav>
         </div>
     </div>
@@ -43,9 +46,12 @@
             <h2 class="text-2xl font-bold text-gray-800">{% block page_title %}{% endblock %}</h2>
             <div class="flex items-center space-x-4">
                 <span class="text-gray-600">Welcome, {{ request.user.username }}</span>
-                <a href="{% url 'logout' %}" class="text-red-600 hover:text-red-800">
-                    <i class="fas fa-sign-out-alt"></i> Logout
-                </a>
+                <form method="POST" action="{% url 'admin_logout' %}" class="inline">
+                    {% csrf_token %}
+                    <button type="submit" class="text-red-600 hover:text-red-800">
+                        <i class="fas fa-sign-out-alt"></i> Logout
+                    </button>
+                </form>
             </div>
         </div>
 

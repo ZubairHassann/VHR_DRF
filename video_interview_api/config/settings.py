@@ -38,9 +38,10 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'interviews',
+    # 'interviews',
     'corsheaders',
     'rest_framework',
+    'interviews.apps.InterviewsConfig'
 ]
 
 MIDDLEWARE = [
@@ -137,3 +138,6 @@ CORS_ALLOW_ALL_ORIGINS = True
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+
+LOGIN_REDIRECT_URL = '/dashboard/' 
+LOGIN_URL = '/admin/login/' 

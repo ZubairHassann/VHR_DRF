@@ -26,7 +26,11 @@ from interviews.views import (
     edit_interview,
     delete_interview,
     ApplicantUpdateView,
-    view_responses
+    view_responses,
+    manage_unique_applicants,
+    view_applicant_responses,
+    admin_login,
+    admin_logout,
 )
 
 # API Router Setup
@@ -70,4 +74,11 @@ urlpatterns = [
     path('responses/<int:response_id>/status/', update_response_status, name='update_response_status'),
     path('view_responses/', view_responses, name='view_responses'),
 
+]
+
+urlpatterns += [
+    path('unique_applicants/', manage_unique_applicants, name='manage_unique_applicants'),
+    path('unique_applicants/<str:email>/<int:position_id>/', view_applicant_responses, name='view_applicant_responses'),
+    path('admin/login/', admin_login, name='admin_login'),
+    path('admin/logout/', admin_logout, name='admin_logout'),
 ]
