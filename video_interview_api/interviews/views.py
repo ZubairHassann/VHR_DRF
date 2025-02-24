@@ -320,26 +320,23 @@ def manage_responses(request):
     })
 
 # @login_required
+@csrf_exempt
 @require_http_methods(["PATCH"])
 def update_response_status(request, response_id):
-    response = get_object_or_404(ApplicantResponse, id=response_id)
-    status = request.POST.get('status')
-    
-    if status in ['Pending', 'Accepted', 'Rejected']:
-        response.status = status
-        response.save()
-        
-        # Update applicant status if needed
-        if status == 'Rejected':
-            response.applicant.status = 'Rejected'
-            response.applicant.save()
-        elif status == 'Accepted' and all(r.status == 'Accepted' for r in response.applicant.responses.all()):
-            response.applicant.status = 'Selected'
-            response.applicant.save()
-            
-        return JsonResponse({'message': f'Response marked as {status}'})
-    
-    return JsonResponse({'error': 'Invalid status'}, status=400)
+    try:
+        response = ApplicantResponse.objects.get(id=response_id)
+        data = json.loads(request.body)
+        status = data.get('status')
+        if status in ['Pending', 'Accepted', 'Rejected']:
+            response.status = status
+            response.save()
+            return JsonResponse({'message': 'Response status updated successfully'}, status=200)
+        else:
+            return JsonResponse({'error': 'Invalid status'}, status=400)
+    except ApplicantResponse.DoesNotExist:
+        return JsonResponse({'error': 'Response not found'}, status=404)
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
 
 
 @method_decorator(csrf_exempt, name='dispatch')
@@ -359,3 +356,10 @@ class ApplicantUpdateView(View):
             return JsonResponse({'error': 'Applicant not found'}, status=404)
         except Exception as e:
             return JsonResponse({'error': str(e)}, status=500)
+
+
+def view_responses(request):
+    applicant_id = request.GET.get('applicant')
+    applicant = get_object_or_404(Applicant, id=applicant_id)
+    responses = ApplicantResponse.objects.filter(applicant=applicant)
+    return render(request, 'admin/view_responses.html', {'applicant': applicant, 'responses': responses})

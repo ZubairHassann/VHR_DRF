@@ -28,8 +28,7 @@ class ApplicantResponseSerializer(serializers.ModelSerializer):
     question = serializers.PrimaryKeyRelatedField(queryset=Question.objects.all())
     class Meta:
         model = ApplicantResponse
-        fields = ['applicant', 'question', 'video_response', 'submission_time', 'status']
-
+        fields = "__all__"
 
 class InterviewSerializer(serializers.ModelSerializer):
     class Meta:

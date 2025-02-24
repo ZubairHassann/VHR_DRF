@@ -25,7 +25,8 @@ from interviews.views import (
     update_interview_status,
     edit_interview,
     delete_interview,
-    ApplicantUpdateView
+    ApplicantUpdateView,
+    view_responses
 )
 
 # API Router Setup
@@ -37,18 +38,13 @@ router.register(r'applicant-responses', ApplicantResponseViewSet)
 router.register(r'interviews', InterviewViewSet)
 
 urlpatterns = [
-    # API Endpoints
     path('api/', include(router.urls)),
     path('api/register/', register, name='register'),
     path('api/login/', login_view, name='login'),
     path('api/logout/', logout_view, name='logout'),
     path('api/user-interviews/', user_interviews, name='user_interviews'),
-
-    # Admin Dashboard
     path('dashboard/', admin_dashboard, name='admin_dashboard'),
-
-    # Interview Management
-    path('interviews/', manage_interviews, name='manage_interviews'),  # Ensure this is defined
+    path('interviews/', manage_interviews, name='manage_interviews'),
     path('interviews/add/', add_interview, name='add_interview'),
     path('interviews/<int:interview_id>/edit/', edit_interview, name='edit_interview'),
     path('interviews/<int:interview_id>/delete/', delete_interview, name='delete_interview'),
@@ -66,9 +62,12 @@ urlpatterns = [
 
     # Applicants Management
     path('applicants/', manage_applicants, name='manage_applicants'),
+    path('applicants/<int:id>/', ApplicantUpdateView.as_view(), name='applicant_update'),
+    path('api/applicant-responses/<int:pk>/status/', update_response_status, name='update_response_status'),
 
     # Responses Management
     path('responses/', manage_responses, name='manage_responses'),
     path('responses/<int:response_id>/status/', update_response_status, name='update_response_status'),
-    path('applicants/<int:id>/', ApplicantUpdateView.as_view(), name='applicant_update'),
+    path('view_responses/', view_responses, name='view_responses'),
+
 ]

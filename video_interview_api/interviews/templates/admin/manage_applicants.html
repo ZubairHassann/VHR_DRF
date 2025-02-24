@@ -4,6 +4,9 @@
 
 {% block admin_content %}
 <div class="bg-white rounded-xl shadow-md overflow-hidden">
+    <!-- CSRF Token -->
+    <input type="hidden" name="csrfmiddlewaretoken" value="{{ csrf_token }}">
+
     <!-- Search and Filter -->
     <div class="p-6 bg-gray-50 border-b">
         <div class="flex items-center space-x-4">
@@ -57,12 +60,10 @@
                                 class="text-blue-600 hover:text-blue-900">
                             <i class="fas fa-video"></i> View Responses
                         </button>
-                        <button onclick="updateStatus({{ applicant.id }}, 'Selected')"
-                                class="text-green-600 hover:text-green-900">
+                        <button onclick="updateStatus({{ applicant.id }}, 'Selected')" class="text-green-600 hover:text-green-900">
                             <i class="fas fa-check"></i> Select
                         </button>
-                        <button onclick="updateStatus({{ applicant.id }}, 'Rejected')"
-                                class="text-red-600 hover:text-red-900">
+                        <button onclick="updateStatus({{ applicant.id }}, 'Rejected')" class="text-red-600 hover:text-red-900">
                             <i class="fas fa-times"></i> Reject
                         </button>
                     </td>
@@ -81,16 +82,17 @@
 
 <script>
     function viewResponses(id) {
-        window.location.href = `/admin/responses/?applicant=${id}`;
+        window.location.href = `/responses/?applicant=${id}`;
     }
 
     function updateStatus(id, status) {
         if (confirm(`Are you sure you want to mark this applicant as ${status}?`)) {
+            const csrfToken = document.querySelector('input[name="csrfmiddlewaretoken"]').value;
             fetch(`/api/applicants/${id}/`, {
                 method: 'PATCH',
                 headers: {
                     'Content-Type': 'application/json',
-                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                    'X-CSRFToken': csrfToken,
                 },
                 body: JSON.stringify({ status: status })
             }).then(response => {
@@ -128,28 +130,5 @@
             }
         });
     });
-
-function updateStatus(id, status) {
-    if (confirm(`Are you sure you want to mark this applicant as ${status}?`)) {
-        fetch(`/api/applicants/${id}/`, {
-            method: 'PATCH',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
-            },
-            body: JSON.stringify({ status: status })
-        }).then(response => {
-            if (response.ok) {
-                showToast(`Applicant marked as ${status}`);
-                window.location.reload();
-            } else {
-                response.json().then(data => {
-                    showToast(`Error: ${data.error}`);
-                });
-            }
-        });
-    }
-}
-
 </script>
 {% endblock %}

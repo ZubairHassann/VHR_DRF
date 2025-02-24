@@ -11,6 +11,9 @@
 
 {% block admin_content %}
 <div class="bg-white rounded-xl shadow-md overflow-hidden">
+    <!-- CSRF Token -->
+    <input type="hidden" name="csrfmiddlewaretoken" value="{{ csrf_token }}">
+
     <!-- Filter Section -->
     <div class="p-6 bg-gray-50 border-b">
         <div class="flex items-center space-x-4">
@@ -103,7 +106,7 @@
     
     function updateResponseStatus(id, status) {
         if (confirm(`Are you sure you want to mark this response as ${status}?`)) {
-            fetch(`/api/responses/${id}/status/`, {
+            fetch(`/responses/${id}/status/`, {
                 method: 'PATCH',
                 headers: {
                     'Content-Type': 'application/json',
