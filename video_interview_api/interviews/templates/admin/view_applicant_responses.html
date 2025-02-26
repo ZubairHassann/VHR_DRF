@@ -217,8 +217,7 @@
                     <tr>
                         <th class="px-6 py-4 text-left text-xs font-semibold text-blue-600 uppercase tracking-wider">Question</th>
                         <th class="px-6 py-4 text-left text-xs font-semibold text-blue-600 uppercase tracking-wider">Video Response</th>
-                        <th class="px-6 py-4 text-left text-xs font-semibold text-blue-600 uppercase tracking-wider">Status</th>
-                        <th class="px-6 py-4 text-left text-xs font-semibold text-blue-600 uppercase tracking-wider">Actions</th>
+                        <th class="px-6 py-4 text-left text-xs font-semibold text-blue-600 uppercase tracking-wider">Score</th>
                     </tr>
                 </thead>
                 <tbody class="bg-white divide-y divide-gray-200">
@@ -252,29 +251,14 @@
                             </span>
                             {% endif %}
                         </td>
-                        <td data-label="Status" class="px-6 py-4">
-                            <span class="px-3 py-1.5 text-sm rounded-full inline-flex items-center space-x-1
-                                {% if response.status == 'Pending' %}bg-yellow-100 text-yellow-800
-                                {% elif response.status == 'Accepted' %}bg-green-100 text-green-800
-                                {% else %}bg-red-100 text-red-800{% endif %}">
-                                <i class="fas fa-circle text-xs"></i>
-                                <span>{{ response.status }}</span>
-                            </span>
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-3">
-                            <button onclick="acceptResponse({{ response.id }})" 
-                                    class="action-button inline-flex items-center px-3 py-1.5 bg-green-50 text-green-600 rounded-lg hover:bg-green-100">
-                                <i class="fas fa-check mr-1.5"></i> Accept
-                            </button>
-                            <button onclick="rejectResponse({{ response.id }})"
-                                    class="action-button inline-flex items-center px-3 py-1.5 bg-red-50 text-red-600 rounded-lg hover:bg-red-100">
-                                <i class="fas fa-times mr-1.5"></i> Reject
-                            </button>
+                        <td data-label="Score" class="px-6 py-4">
+                            <input type="number" min="0" max="10" value="{{ response.score }}" onchange="updateScore({{ response.id }}, this.value)" class="w-16 px-2 py-1 border rounded-lg">
+                            <span id="score-display-{{ response.id }}" class="ml-2 text-sm text-gray-700">{{ response.score }}</span>
                         </td>
                     </tr>
                     {% empty %}
                     <tr>
-                        <td colspan="4" class="px-6 py-8 text-center text-gray-500">
+                        <td colspan="3" class="px-6 py-8 text-center text-gray-500">
                             <div class="flex flex-col items-center">
                                 <i class="fas fa-video-slash text-4xl mb-3 text-gray-300"></i>
                                 <p>No responses available</p>
@@ -291,21 +275,24 @@
             <div class="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
                 <div class="flex items-center space-x-2">
                     <i class="fas fa-chart-pie text-blue-600"></i>
-                    <p class="text-sm font-medium text-gray-700">Progress: {{ responses|length }} / {{ total_questions }} Questions</p>
+                    <p class="text-sm font-medium text-gray-700">Progress: <span id="answered-questions">{{ answered_questions }}</span> / {{ total_questions }} Questions</p>
                 </div>
-                <div class="flex space-x-6">
-                    <div class="flex items-center space-x-2">
-                        <i class="fas fa-clock text-yellow-500"></i>
-                        <p class="text-sm text-yellow-700">Pending: {{ responses|status_count:"Pending" }}</p>
-                    </div>
-                    <div class="flex items-center space-x-2">
-                        <i class="fas fa-check-circle text-green-500"></i>
-                        <p class="text-sm text-green-700">Accepted: {{ responses|status_count:"Accepted" }}</p>
-                    </div>
-                    <div class="flex items-center space-x-2">
-                        <i class="fas fa-times-circle text-red-500"></i>
-                        <p class="text-sm text-red-700">Rejected: {{ responses|status_count:"Rejected" }}</p>
-                    </div>
+                <div class="flex items-center space-x-2">
+                    <i class="fas fa-star text-yellow-500"></i>
+                    <p class="text-sm font-medium text-gray-700">Total Score: <span id="total-score">{{ total_score }}</span> / {{ total_questions|multiply:10 }}</p>
+                </div>
+                <div class="flex items-center space-x-2">
+                    <p class="text-sm font-medium text-gray-700">Current Status: <span id="current-status">{{ applicant.status }}</span></p>
+                </div>
+                <div class="flex items-center space-x-2">
+                    <button onclick="updateStatus('{{ applicant.email }}', {{ applicant.position.id }}, 'Selected')" 
+                            class="action-button inline-flex items-center px-3 py-1.5 bg-green-50 text-green-600 rounded-lg hover:bg-green-100">
+                        <i class="fas fa-check mr-1.5"></i> Select
+                    </button>
+                    <button onclick="updateStatus('{{ applicant.email }}', {{ applicant.position.id }}, 'Rejected')" 
+                            class="action-button inline-flex items-center px-3 py-1.5 bg-red-50 text-red-600 rounded-lg hover:bg-red-100">
+                        <i class="fas fa-times mr-1.5"></i> Reject
+                    </button>
                 </div>
             </div>
         </div>
@@ -343,28 +330,110 @@
         }, 3000);
     }
 
-    // Response status update functions
-    function acceptResponse(id) {
-        updateResponseStatus(id, 'Accepted');
+    // Update score function
+    function updateScore(id, score) {
+        fetch(`/responses/${id}/score/`, {
+            method: 'PATCH',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+            },
+            body: JSON.stringify({ score: score })
+        }).then(response => {
+            if (response.ok) {
+                document.getElementById(`score-display-${id}`).textContent = score;
+                showToast(`Score updated to ${score}`);
+                updateTotalScore();
+            } else {
+                response.json().then(data => {
+                    showToast(data.error || 'An error occurred', 'error');
+                });
+            }
+        }).catch(error => {
+            showToast('Network error occurred', 'error');
+        });
     }
-    
-    function rejectResponse(id) {
-        updateResponseStatus(id, 'Rejected');
+
+    // Function to update the total score in the summary section
+    function updateTotalScore() {
+        let totalScore = 0;
+        document.querySelectorAll('[id^="score-display-"]').forEach(element => {
+            totalScore += parseInt(element.textContent) || 0;
+        });
+        document.getElementById('total-score').textContent = totalScore;
     }
+
+    // Function to update the status of the applicant
+    function updateStatus(email, positionId, status) {
+        if (confirm(`Are you sure you want to mark this applicant as ${status}?`)) {
+            const csrfToken = document.querySelector('input[name="csrfmiddlewaretoken"]').value;
+            
+            // Fetch applicant ID based on email and position
+            fetch(`/api/applicants/?email=${email}&position=${positionId}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.length > 0) {
+                        const applicantId = data[0].id;  // Assuming the API returns a list of applicants
+                        
+                        // Update applicant status using ApplicantUpdateView
+                        fetch(`/api/applicants/${applicantId}/`, {
+                            method: 'PATCH',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRFToken': csrfToken,
+                            },
+                            body: JSON.stringify({ status: status })
+                        }).then(response => {
+                            if (response.ok) {
+                                document.getElementById('current-status').textContent = status;
+                                showToast(`Applicant marked as ${status}`);
+                            } else {
+                                response.json().then(data => {
+                                    showToast(`Error: ${data.error}`);
+                                });
+                            }
+                        });
+                    } else {
+                        showToast(`Error: Applicant not found`);
+                    }
+                });
+        }
+    }
+
+        // Function to score the response using AI
+        function scoreResponse(responseId, question, videoUrl) {
+            fetch('/api/score_response/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                },
+                body: JSON.stringify({ response_id: responseId, question: question, video_url: videoUrl })
+            }).then(response => response.json())
+            .then(data => {
+                const score = data.score;
+                document.getElementById(`score-display-${responseId}`).textContent = score;
+                showToast(`Score updated to ${score}`);
+                updateTotalScore();
+            }).catch(error => {
+                showToast('Network error occurred', 'error');
+            });
+        }
     
-    function updateResponseStatus(id, status) {
-        if (confirm(`Are you sure you want to mark this response as ${status}?`)) {
-            fetch(`/responses/${id}/status/`, {
+        // Update score function
+        function updateScore(id, score) {
+            fetch(`/responses/${id}/score/`, {
                 method: 'PATCH',
                 headers: {
                     'Content-Type': 'application/json',
                     'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
                 },
-                body: JSON.stringify({ status: status })
+                body: JSON.stringify({ score: score })
             }).then(response => {
                 if (response.ok) {
-                    showToast(`Response marked as ${status}`);
-                    window.location.reload();
+                    document.getElementById(`score-display-${id}`).textContent = score;
+                    showToast(`Score updated to ${score}`);
+                    updateTotalScore();
                 } else {
                     response.json().then(data => {
                         showToast(data.error || 'An error occurred', 'error');
@@ -374,6 +443,14 @@
                 showToast('Network error occurred', 'error');
             });
         }
-    }
+    
+        // Function to update the total score in the summary section
+        function updateTotalScore() {
+            let totalScore = 0;
+            document.querySelectorAll('[id^="score-display-"]').forEach(element => {
+                totalScore += parseInt(element.textContent) || 0;
+            });
+            document.getElementById('total-score').textContent = totalScore;
+        }
 </script>
 {% endblock %}

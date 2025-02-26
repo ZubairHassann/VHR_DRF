@@ -57,8 +57,8 @@ class QuestionAdmin(admin.ModelAdmin):
 
 @admin.register(ApplicantResponse)
 class ApplicantResponseAdmin(admin.ModelAdmin):
-    list_display = ('applicant', 'question', 'submission_time', 'status', 'get_video_player')
-    list_filter = ('status', 'submission_time', 'applicant__position')
+    list_display = ('applicant', 'question', 'submission_time', 'score', 'get_video_player')
+    list_filter = ('score', 'submission_time', 'applicant__position')
     search_fields = ('applicant__fullname', 'applicant__email')
     actions = ['mark_accepted', 'mark_rejected']
 
@@ -72,20 +72,11 @@ class ApplicantResponseAdmin(admin.ModelAdmin):
     get_video_player.short_description = 'Video Response'
 
     def mark_accepted(self, request, queryset):
-        queryset.update(status='Accepted')
-        # Update applicant status if all responses are accepted
-        for response in queryset:
-            if all(r.status == 'Accepted' for r in response.applicant.responses.all()):
-                response.applicant.status = 'Selected'
-                response.applicant.save()
+        queryset.update(score=10)  # Example of marking as accepted with a score of 10
     mark_accepted.short_description = "Mark selected responses as Accepted"
 
     def mark_rejected(self, request, queryset):
-        queryset.update(status='Rejected')
-        # Update applicant status if any response is rejected
-        for response in queryset:
-            response.applicant.status = 'Rejected'
-            response.applicant.save()
+        queryset.update(score=0)  # Example of marking as rejected with a score of 0
     mark_rejected.short_description = "Mark selected responses as Rejected"
 
     class Media:
@@ -93,7 +84,6 @@ class ApplicantResponseAdmin(admin.ModelAdmin):
             'all': ('admin/css/custom_admin.css',)
         }
         js = ('admin/js/custom_admin.js',)
-
-
+        
 admin.site.register(Interview, InterviewAdmin)
 admin.site.register(Applicant, ApplicantAdmin)

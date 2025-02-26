@@ -81,4 +81,5 @@ urlpatterns += [
     path('unique_applicants/<str:email>/<int:position_id>/', view_applicant_responses, name='view_applicant_responses'),
     path('admin/login/', admin_login, name='admin_login'),
     path('admin/logout/', admin_logout, name='admin_logout'),
+    path('responses/<int:response_id>/score/', update_response_status, name='update_response_score'),
 ]

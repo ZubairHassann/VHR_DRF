@@ -335,18 +335,15 @@ def update_response_status(request, response_id):
     try:
         response = ApplicantResponse.objects.get(id=response_id)
         data = json.loads(request.body)
-        status = data.get('status')
-        if status in ['Pending', 'Accepted', 'Rejected']:
-            response.status = status
-            response.save()
-            return JsonResponse({'message': 'Response status updated successfully'}, status=200)
-        else:
-            return JsonResponse({'error': 'Invalid status'}, status=400)
+        score = data.get('score')
+        if score is not None:
+            response.score = score
+        response.save()
+        return JsonResponse({'message': 'Response updated successfully'}, status=200)
     except ApplicantResponse.DoesNotExist:
         return JsonResponse({'error': 'Response not found'}, status=404)
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=500)
-
 
 @method_decorator(csrf_exempt, name='dispatch')
 class ApplicantUpdateView(View):
@@ -397,17 +394,19 @@ def manage_unique_applicants(request):
 @login_required
 def view_applicant_responses(request, email, position_id):
     applicant = get_object_or_404(Applicant, email=email, position_id=position_id)
-    responses = applicant.responses.all()
-    
-    # Get total questions for this position using the positions field
-    total_questions = Question.objects.filter(positions=position_id).count()
-    
+    responses = ApplicantResponse.objects.filter(applicant=applicant)
+    total_score = responses.aggregate(total=models.Sum('score'))['total'] or 0
+    max_score = responses.count() * 10  # Assuming the max score for each response is 10
+    total_questions = Question.objects.filter(positions=applicant.position).count()
+    answered_questions = responses.count()
     return render(request, 'admin/view_applicant_responses.html', {
         'applicant': applicant,
         'responses': responses,
-        'total_questions': total_questions
+        'total_score': total_score,
+        'max_score': max_score,
+        'total_questions': total_questions,
+        'answered_questions': answered_questions
     })
-
 
 @login_required
 def admin_login(request):
@@ -582,3 +581,6 @@ def admin_dashboard(request):
             'error': 'Error loading dashboard data. Please try again.'
         })
     
+
+
+

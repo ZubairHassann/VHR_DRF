@@ -51,6 +51,14 @@
     .status-badge:hover {
         transform: scale(1.1);
     }
+
+    .th-with-padding {
+        padding-right: 20px; /* adjust the value as needed */
+      }
+
+    .th-with-space {
+    white-space: pre;
+    }
 </style>
 {% endblock %}
 
@@ -85,9 +93,9 @@
                         <th class="px-6 py-4 text-left text-xs font-semibold text-blue-600 uppercase tracking-wider">Email</th>
                         <th class="px-6 py-4 text-left text-xs font-semibold text-blue-600 uppercase tracking-wider">Full Name</th>
                         <th class="px-6 py-4 text-left text-xs font-semibold text-blue-600 uppercase tracking-wider">Position</th>
-                        <th class="px-6 py-4 text-left text-xs font-semibold text-blue-600 uppercase tracking-wider">Responses</th>
+                        <th class="px-6 py-4 text-left text-xs font-semibold text-blue-600 uppercase tracking-wider">Total Responses</th>
                         <th class="px-6 py-4 text-left text-xs font-semibold text-blue-600 uppercase tracking-wider">Status</th>
-                        <th class="px-6 py-4 text-left text-xs font-semibold text-blue-600 uppercase tracking-wider">Actions</th>
+                        <th class="px-6 py-4 text-left text-xs font-semibold text-blue-600 uppercase tracking-wider" style="white-space: pre;">Responses                 Action</th>
                     </tr>
                 </thead>
                 <tbody class="bg-white divide-y divide-gray-200">
