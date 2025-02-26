@@ -580,7 +580,3 @@ def admin_dashboard(request):
         return render(request, 'admin/dashboard.html', {
             'error': 'Error loading dashboard data. Please try again.'
         })
-    
-
-
-

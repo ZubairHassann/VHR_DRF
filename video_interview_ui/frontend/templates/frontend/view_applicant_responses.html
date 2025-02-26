@@ -1,0 +1,30 @@
+<!-- filepath: /home/reicho/Mega Sync Backups/Coding/VHR/VHR_DRF/video_interview_ui/frontend/templates/frontend/view_applicant_responses.html -->
+
+{% extends 'base.html' %}
+
+{% block title %}Applicant Responses{% endblock %}
+
+{% block content %}
+<div class="min-h-screen flex flex-col items-center justify-center py-12 px-4 sm:px-6 lg:px-8 bg-gradient-to-r from-indigo-600 to-purple-600">
+    <div class="max-w-4xl w-full space-y-8 bg-white p-8 rounded-xl shadow-lg transform hover:shadow-2xl transition-all duration-300">
+        <div class="text-center">
+            <h2 class="text-3xl font-extrabold text-gray-900 mb-2">Applicant Responses</h2>
+            <p class="text-sm text-gray-600">Detailed responses for the applicant</p>
+        </div>
+
+        <div id="applicant-responses" class="space-y-4">
+            {% if responses %}
+                {% for response in responses %}
+                    <div class="p-4 bg-gradient-to-r from-blue-50 to-blue-100 rounded-lg shadow-md transform hover:scale-105 transition-all duration-300">
+                        <p class="text-sm text-gray-600">Question: {{ response.question_details.text }}</p>
+                        <p class="text-sm text-gray-600">Answer: {{ response.answer }}</p>
+                        <p class="text-sm text-gray-600">Score: {{ response.score }}</p>
+                    </div>
+                {% endfor %}
+            {% else %}
+                <p class="text-center text-gray-600">No responses found.</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

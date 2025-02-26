@@ -1,4 +1,5 @@
 <!-- filepath: /home/reicho/Mega Sync Backups/Coding/VHR/VHR_DRF/video_interview_ui/frontend/templates/base.html -->
+
 {% load static %}
 <!DOCTYPE html>
 <html lang="en">
@@ -24,6 +25,7 @@
 
         body {
             font-family: 'Inter', sans-serif;
+            background: #f3f4f6;
         }
 
         .glass-effect {
@@ -64,6 +66,40 @@
             50% { background-position: 100% 50%; }
             100% { background-position: 0% 50%; }
         }
+
+        .nav-blur {
+            backdrop-filter: blur(10px);
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .brand-text {
+            background: var(--primary-gradient);
+            -webkit-background-clip: text;
+        }
+
+        .nav-pill {
+            background: var(--secondary-gradient);
+            transition: all 0.3s ease;
+        }
+
+        .nav-pill:hover {
+            background: var(--primary-gradient);
+        }
+
+        .slide-in-top {
+            animation: slide-in-top 0.5s ease-out forwards;
+        }
+
+        @keyframes slide-in-top {
+            0% {
+                transform: translateY(-100%);
+                opacity: 0;
+            }
+            100% {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
     </style>
 </head>
 <body class="flex flex-col min-h-screen bg-slate-50">
@@ -92,10 +128,6 @@
                 <i class="fas fa-video text-sm"></i>
                 <span>Interviews</span>
             </a>
-            <a href="{% url 'dashboard' %}" class="nav-pill text-white/90 hover:text-white px-3 py-1 text-sm rounded-lg transition-all duration-300 flex items-center space-x-2">
-                <i class="fas fa-chart-line text-sm"></i>
-                <span>Dashboard</span>
-            </a>
             <a href="{% url 'logout' %}" class="nav-pill text-white/90 hover:text-white px-3 py-1 text-sm rounded-lg transition-all duration-300 flex items-center space-x-2">
                 <i class="fas fa-sign-out-alt text-sm"></i>
                 <span>Logout</span>
@@ -104,10 +136,6 @@
             <a href="{% url 'login' %}" class="nav-pill text-white/90 hover:text-white px-3 py-1 text-sm rounded-lg transition-all duration-300 flex items-center space-x-2">
                 <i class="fas fa-sign-in-alt text-sm"></i>
                 <span>Login</span>
-            </a>
-            <a href="{% url 'register' %}" class="nav-pill text-white/90 hover:text-white px-3 py-1 text-sm rounded-lg transition-all duration-300 flex items-center space-x-2">
-                <i class="fas fa-user-plus text-sm"></i>
-                <span>Sign Up</span>
             </a>
             {% endif %}
         </div>
@@ -131,18 +159,12 @@
         <a href="{% url 'interviews' %}" class="block text-white hover:bg-white hover:bg-opacity-10 px-4 py-3 rounded-lg transition-all duration-300">
             <i class="fas fa-video mr-3"></i>Interviews
         </a>
-        <a href="{% url 'dashboard' %}" class="block text-white hover:bg-white hover:bg-opacity-10 px-4 py-3 rounded-lg transition-all duration-300">
-            <i class="fas fa-chart-line mr-3"></i>Dashboard
-        </a>
         <a href="{% url 'logout' %}" class="block text-white hover:bg-white hover:bg-opacity-10 px-4 py-3 rounded-lg transition-all duration-300">
             <i class="fas fa-sign-out-alt mr-3"></i>Logout
         </a>
         {% else %}
         <a href="{% url 'login' %}" class="block text-white hover:bg-white hover:bg-opacity-10 px-4 py-3 rounded-lg transition-all duration-300">
             <i class="fas fa-sign-in-alt mr-3"></i>Login
-        </a>
-        <a href="{% url 'register' %}" class="block text-white hover:bg-white hover:bg-opacity-10 px-4 py-3 rounded-lg transition-all duration-300">
-            <i class="fas fa-user-plus mr-3"></i>Sign Up
         </a>
         {% endif %}
     </div>

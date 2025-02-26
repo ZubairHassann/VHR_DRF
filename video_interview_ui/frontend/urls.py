@@ -9,4 +9,5 @@ urlpatterns = [
     path('logout/', views.logout_view, name='logout'),
     path('dashboard/', views.dashboard, name='dashboard'),
     path('interviews/', views.interviews, name='interviews'),
+    path('view_applicant_responses/<str:email>/<int:position_id>/', views.view_applicant_responses, name='view_applicant_responses'),
 ]

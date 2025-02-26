@@ -5,6 +5,8 @@ from django.conf import settings
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.models import User
 from .decorators import login_required_custom
+from django.contrib.auth.decorators import login_required
+from requests.exceptions import RequestException
 
 BACKEND_API_URL = "http://127.0.0.1:8000/api"
 
@@ -31,7 +33,7 @@ def login_view(request):
         user = authenticate(request, username=username, password=password)
         if user is not None:
             login(request, user)
-            return redirect(reverse("dashboard"))
+            return redirect(reverse("interviews"))
         else:
             return render(request, "frontend/login.html", {"error": "Invalid username or password."})
 
@@ -53,18 +55,8 @@ def dashboard(request):
 
     return render(request, "frontend/dashboard.html", {"applicants": applicants})
 
-@login_required_custom
-def interviews(request):
-    user_email = request.user.email
-    response = requests.get(f"{BACKEND_API_URL}/applicants/?email={user_email}")
 
-    if response.status_code == 200:
-        applicants = response.json()
-    else:
-        applicants = []
-
-    return render(request, "frontend/interviews.html", {"applicants": applicants})
-
+@login_required(login_url='login')
 def index(request):
     error_message = None  # Initialize error message
 
@@ -128,3 +120,62 @@ def video_interview(request, applicant_id):
         "applicant_email": applicant.get("email"),
         "questions": questions,
     })
+
+
+@login_required(login_url='login')
+def interviews(request):
+    user_email = request.user.email
+    try:
+        # Fetch applicants
+        applicants_response = requests.get(f"{BACKEND_API_URL}/applicants/")
+        applicants_response.raise_for_status()
+        applicants = applicants_response.json()
+
+        # Fetch positions
+        positions_response = requests.get(f"{BACKEND_API_URL}/positions/")
+        positions_response.raise_for_status()
+        positions = positions_response.json()
+
+        # Filter applicants based on the current user's email
+        user_applicants = [applicant for applicant in applicants if applicant['email'] == user_email]
+
+        # Add position details to each applicant
+        for applicant in user_applicants:
+            applicant['total_questions'] = applicant.get('total_questions', 0)
+            applicant['total_score'] = applicant.get('total_score', 0)
+            applicant['position_details'] = next((position for position in positions if position['id'] == applicant['position']), None)
+
+    except RequestException as e:
+        print(f"Network error: {e}")
+        user_applicants = []
+    except ValueError as e:
+        print(f"JSON decode error: {e}")
+        user_applicants = []
+
+    return render(request, "frontend/interviews.html", {"applicants": user_applicants, "user_email": user_email, "user_fullname": request.user.get_full_name()})
+
+@login_required(login_url='login')
+def view_applicant_responses(request, email, position_id):
+    try:
+        # Fetch applicant responses
+        responses_response = requests.get(f"{BACKEND_API_URL}/applicant-responses/?email={email}&position={position_id}")
+        responses_response.raise_for_status()
+        responses = responses_response.json()
+
+        # Fetch questions
+        questions_response = requests.get(f"{BACKEND_API_URL}/questions/")
+        questions_response.raise_for_status()
+        questions = questions_response.json()
+
+        # Add question details to each response
+        for response in responses:
+            response['question_details'] = next((question for question in questions if question['id'] == response['question']), None)
+
+    except RequestException as e:
+        print(f"Network error: {e}")
+        responses = []
+    except ValueError as e:
+        print(f"JSON decode error: {e}")
+        responses = []
+
+    return render(request, "frontend/view_applicant_responses.html", {"responses": responses})

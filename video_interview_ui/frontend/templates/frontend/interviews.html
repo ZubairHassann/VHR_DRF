@@ -1,24 +1,41 @@
-<!-- filepath: video_interview_ui/frontend/templates/frontend/interviews.html -->
+<!-- filepath: /home/reicho/Mega Sync Backups/Coding/VHR/VHR_DRF/video_interview_ui/frontend/templates/frontend/interviews.html -->
 
 {% extends 'base.html' %}
-
+{% load response_filters %}
 {% block title %}Interviews{% endblock %}
 
 {% block content %}
-<div class="min-h-screen flex flex-col items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+<div class="min-h-screen flex flex-col items-center justify-center py-12 px-4 sm:px-6 lg:px-8 bg-gradient-to-r from-indigo-600 to-purple-600">
     <div class="max-w-4xl w-full space-y-8 bg-white p-8 rounded-xl shadow-lg transform hover:shadow-2xl transition-all duration-300">
         <div class="text-center">
             <h2 class="text-3xl font-extrabold text-gray-900 mb-2">Interviews</h2>
             <p class="text-sm text-gray-600">Your conducted interviews</p>
+            <p class="text-sm text-gray-600">User: {{ user_fullname }} ({{ user_email }})</p>
         </div>
 
         <div id="conducted-interviews" class="space-y-4">
             {% if applicants %}
                 {% for applicant in applicants %}
-                    <div class="p-4 bg-gray-100 rounded-lg shadow-md">
-                        <h3 class="text-lg font-semibold text-gray-800">{{ applicant.position.name }}</h3>
-                        <p class="text-sm text-gray-600">Status: {{ applicant.status }}</p>
-                        <p class="text-sm text-gray-600">Applied on: {{ applicant.created_at }}</p>
+                    <div class="p-4 bg-gradient-to-r from-blue-50 to-blue-100 rounded-lg shadow-md transform hover:scale-105 transition-all duration-300">
+                        <h3 class="text-lg font-semibold text-gray-800">{{ applicant.fullname }}</h3>
+                        <p class="text-sm text-gray-600">Email: {{ applicant.email }}</p>
+                        <p class="text-sm text-gray-600">Position: {{ applicant.position_details.name }}</p>
+                        <p class="text-sm text-gray-600">Status: 
+                            <span class="px-2 py-1 rounded-full 
+                                {% if applicant.status == 'Pending' %}bg-yellow-100 text-yellow-800
+                                {% elif applicant.status == 'Selected' %}bg-green-100 text-green-800
+                                {% else %}bg-red-100 text-red-800{% endif %}">
+                                {{ applicant.status }}
+                            </span>
+                        </p>
+                        <p class="text-sm text-gray-600">Applied on: {{ applicant.created_at|date:"F j, Y" }}</p>
+                        <p class="text-sm text-gray-600">Interview Date: {{ applicant.interview_date|date:"F j, Y" }}</p>
+                        <p class="text-sm text-gray-600">Total Score: {{ applicant.total_score }} / {{ applicant.total_questions|default:0|multiply:10 }}</p>
+                        {% if applicant.position_id %}
+                            <a href="{% url 'view_applicant_responses' applicant.email applicant.position_id %}" class="text-blue-600 hover:underline">View Detailed Responses</a>
+                        {% else %}
+                            <span class="text-gray-600">Position ID not available</span>
+                        {% endif %}
                     </div>
                 {% endfor %}
             {% else %}

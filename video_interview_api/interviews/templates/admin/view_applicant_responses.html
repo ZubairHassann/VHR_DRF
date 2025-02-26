@@ -399,58 +399,5 @@
                 });
         }
     }
-
-        // Function to score the response using AI
-        function scoreResponse(responseId, question, videoUrl) {
-            fetch('/api/score_response/', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
-                },
-                body: JSON.stringify({ response_id: responseId, question: question, video_url: videoUrl })
-            }).then(response => response.json())
-            .then(data => {
-                const score = data.score;
-                document.getElementById(`score-display-${responseId}`).textContent = score;
-                showToast(`Score updated to ${score}`);
-                updateTotalScore();
-            }).catch(error => {
-                showToast('Network error occurred', 'error');
-            });
-        }
-    
-        // Update score function
-        function updateScore(id, score) {
-            fetch(`/responses/${id}/score/`, {
-                method: 'PATCH',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
-                },
-                body: JSON.stringify({ score: score })
-            }).then(response => {
-                if (response.ok) {
-                    document.getElementById(`score-display-${id}`).textContent = score;
-                    showToast(`Score updated to ${score}`);
-                    updateTotalScore();
-                } else {
-                    response.json().then(data => {
-                        showToast(data.error || 'An error occurred', 'error');
-                    });
-                }
-            }).catch(error => {
-                showToast('Network error occurred', 'error');
-            });
-        }
-    
-        // Function to update the total score in the summary section
-        function updateTotalScore() {
-            let totalScore = 0;
-            document.querySelectorAll('[id^="score-display-"]').forEach(element => {
-                totalScore += parseInt(element.textContent) || 0;
-            });
-            document.getElementById('total-score').textContent = totalScore;
-        }
 </script>
 {% endblock %}

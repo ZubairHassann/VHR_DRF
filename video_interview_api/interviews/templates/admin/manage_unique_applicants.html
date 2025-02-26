@@ -107,6 +107,10 @@
                                     <span class="text-blue-600 font-semibold">{{ applicant.email|first|upper }}</span>
                                 </div>
                                 <span class="text-sm font-medium text-gray-900">{{ applicant.email }}</span>
+                                <button onclick="sendEmail('{{ applicant.email }}', '{{ applicant.status }}')" 
+                                        class="action-button inline-flex items-center px-3 py-1.5 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 ml-2">
+                                    <i class="fas fa-envelope mr-1.5"></i> Email
+                                </button>
                             </div>
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap">
@@ -209,6 +213,22 @@
                     }
                 });
         }
+    }
+
+    function sendEmail(email, status) {
+        let subject = '';
+        let body = '';
+
+        if (status === 'Selected') {
+            subject = 'Congratulations on Your Selection';
+            body = `Dear Applicant,\n\nWe are pleased to inform you that you have been selected for the position. Congratulations!\n\nBest regards,\nThe Vista One`;
+        } else if (status === 'Rejected') {
+            subject = 'Application Status Update';
+            body = `Dear Applicant,\n\nWe regret to inform you that your application for the position has been rejected. We appreciate your interest in The Vista One and wish you all the best in your future endeavors.\n\nBest regards,\nThe Vista One`;
+        }
+
+        const mailtoLink = `mailto:${email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+        window.location.href = mailtoLink;
     }
 
     // Search functionality

@@ -31,6 +31,8 @@ from interviews.views import (
     view_applicant_responses,
     admin_login,
     admin_logout,
+    update_response_status,
+    
 )
 
 # API Router Setup
