@@ -3,6 +3,7 @@ from django.contrib.auth.models import User
 
 class Position(models.Model):
     name = models.CharField(max_length=255, unique=True)
+    created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
         return self.name
@@ -19,6 +20,7 @@ class Applicant(models.Model):
     position = models.ForeignKey(Position, on_delete=models.CASCADE, related_name="applicants")
     status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='Pending')
     resume = models.FileField(upload_to='resumes/', null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
         unique_together = ('email', 'position')
@@ -61,6 +63,7 @@ class Interview(models.Model):
     description = models.TextField()
     scheduled_date = models.DateTimeField()
     status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='pending')
-
+    created_at = models.DateTimeField(auto_now_add=True)
+    
     def __str__(self):
         return self.title

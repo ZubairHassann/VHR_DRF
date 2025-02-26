@@ -1,76 +1,228 @@
 {% extends "admin/base_admin.html" %}
 {% block title %}Manage Unique Applicants{% endblock %}
 {% block page_title %}Manage Unique Applicants{% endblock %}
+{% load response_filters %}
+
+{% block extra_head %}
+<link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+<script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+<style>
+    .gradient-border {
+        position: relative;
+        background: linear-gradient(60deg, #f79533, #f37055, #ef4e7b, #a166ab, #5073b8, #1098ad, #07b39b, #6fba82);
+        padding: 3px;
+        border-radius: 1rem;
+        animation: animatedgradient 6s ease alternate infinite;
+        background-size: 300% 300%;
+    }
+
+    .gradient-border-content {
+        background: white;
+        border-radius: 0.9rem;
+    }
+
+    @keyframes animatedgradient {
+        0% { background-position: 0% 50%; }
+        50% { background-position: 100% 50%; }
+        100% { background-position: 0% 50%; }
+    }
+
+    .table-row-animate {
+        transition: all 0.3s ease;
+    }
+
+    .table-row-animate:hover {
+        transform: translateX(10px);
+        background: rgba(59, 130, 246, 0.05);
+    }
+
+    .action-button {
+        transition: all 0.2s ease;
+    }
+
+    .action-button:hover {
+        transform: translateY(-2px);
+    }
+
+    .status-badge {
+        transition: all 0.3s ease;
+    }
+
+    .status-badge:hover {
+        transform: scale(1.1);
+    }
+</style>
+{% endblock %}
 
 {% block admin_content %}
-<div class="bg-white rounded-xl shadow-md overflow-hidden">
-    <!-- Search Filter -->
-    <div class="p-6 bg-gray-50 border-b">
-        <div class="flex items-center space-x-4">
-            <div class="flex-1">
-                <input type="text" id="searchInput" placeholder="Search by email or position..." 
-                       class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+<div class="gradient-border" data-aos="fade-up">
+    <div class="gradient-border-content">
+        <!-- Search and Filter -->
+        <div class="p-6 bg-gray-50 border-b rounded-t-xl">
+            <div class="flex flex-col md:flex-row items-center space-y-4 md:space-y-0 md:space-x-4">
+                <div class="flex-1 w-full">
+                    <div class="relative">
+                        <input type="text" id="searchInput" placeholder="Search by email or position..." 
+                               class="w-full px-4 py-3 pl-10 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-300">
+                        <i class="fas fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+                    </div>
+                </div>
+                <select id="status-filter" 
+                        class="w-full md:w-48 px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-300">
+                    <option value="">📋 All Status</option>
+                    <option value="Pending">📊 Pending</option>
+                    <option value="Selected">✅ Selected</option>
+                    <option value="Rejected">❌ Rejected</option>
+                </select>
             </div>
         </div>
-    </div>
 
-    <!-- Applicants List -->
-    <div class="overflow-x-auto">
-        <table class="min-w-full divide-y divide-gray-200">
-            <thead class="bg-gray-50">
-                <tr>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Full Name</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Position</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Responses</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
-                </tr>
-            </thead>
-            <tbody class="bg-white divide-y divide-gray-200">
-                {% for applicant in unique_applicants %}
-                <tr class="hover:bg-gray-50 transition">
-                    <td class="px-6 py-4 whitespace-nowrap">
-                        <span class="text-sm font-medium text-gray-900">{{ applicant.email }}</span>
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap">
-                        <span class="text-sm text-gray-900">{{ applicant.fullname }}</span>
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {{ applicant.position__name }}
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap">
-                        <span class="px-2 py-1 text-sm text-blue-600 bg-blue-100 rounded-full">
-                            {{ applicant.responses_count }} responses
-                        </span>
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
-                        <a href="{% url 'view_applicant_responses' applicant.email applicant.position %}" 
-                           class="text-blue-600 hover:text-blue-900">
-                            <i class="fas fa-eye"></i> View Responses
-                        </a>
-                    </td>
-                </tr>
-                {% empty %}
-                <tr>
-                    <td colspan="5" class="px-6 py-4 text-center text-gray-500">
-                        No unique applicants found.
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+        <!-- Applicants List -->
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gradient-to-r from-blue-50 to-blue-100">
+                    <tr>
+                        <th class="px-6 py-4 text-left text-xs font-semibold text-blue-600 uppercase tracking-wider">Email</th>
+                        <th class="px-6 py-4 text-left text-xs font-semibold text-blue-600 uppercase tracking-wider">Full Name</th>
+                        <th class="px-6 py-4 text-left text-xs font-semibold text-blue-600 uppercase tracking-wider">Position</th>
+                        <th class="px-6 py-4 text-left text-xs font-semibold text-blue-600 uppercase tracking-wider">Responses</th>
+                        <th class="px-6 py-4 text-left text-xs font-semibold text-blue-600 uppercase tracking-wider">Status</th>
+                        <th class="px-6 py-4 text-left text-xs font-semibold text-blue-600 uppercase tracking-wider">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    {% for applicant in unique_applicants %}
+                    <tr class="table-row-animate" data-aos="fade-left" data-aos-delay="{{ forloop.counter|multiply:100 }}">
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="flex items-center">
+                                <div class="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center mr-3">
+                                    <span class="text-blue-600 font-semibold">{{ applicant.email|first|upper }}</span>
+                                </div>
+                                <span class="text-sm font-medium text-gray-900">{{ applicant.email }}</span>
+                            </div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <span class="text-sm text-gray-900">{{ applicant.fullname }}</span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="flex items-center text-sm text-gray-500">
+                                <i class="fas fa-briefcase mr-2 text-gray-400"></i>
+                                {{ applicant.position__name }}
+                            </div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <span class="status-badge px-3 py-1.5 text-sm bg-blue-100 text-blue-800 rounded-full inline-flex items-center">
+                                <i class="fas fa-comment-dots mr-1.5"></i>
+                                {{ applicant.responses_count }} responses
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <span class="status-badge px-3 py-1.5 text-sm rounded-full inline-flex items-center
+                                {% if applicant.status == 'Pending' %}bg-yellow-100 text-yellow-800
+                                {% elif applicant.status == 'Selected' %}bg-green-100 text-green-800
+                                {% else %}bg-red-100 text-red-800{% endif %}">
+                                <i class="fas fa-circle text-xs mr-1.5 
+                                    {% if applicant.status == 'Pending' %}text-yellow-500
+                                    {% elif applicant.status == 'Selected' %}text-green-500
+                                    {% else %}text-red-500{% endif %}"></i>
+                                {{ applicant.status }}
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-3">
+                            <a href="{% url 'view_applicant_responses' applicant.email applicant.position %}" 
+                               class="action-button inline-flex items-center px-3 py-1.5 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100">
+                                <i class="fas fa-eye mr-1.5"></i> View
+                            </a>
+                            <button onclick="updateStatus('{{ applicant.email }}', {{ applicant.position }}, 'Selected')" 
+                                    class="action-button inline-flex items-center px-3 py-1.5 bg-green-50 text-green-600 rounded-lg hover:bg-green-100">
+                                <i class="fas fa-check mr-1.5"></i> Select
+                            </button>
+                            <button onclick="updateStatus('{{ applicant.email }}', {{ applicant.position }}, 'Rejected')" 
+                                    class="action-button inline-flex items-center px-3 py-1.5 bg-red-50 text-red-600 rounded-lg hover:bg-red-100">
+                                <i class="fas fa-times mr-1.5"></i> Reject
+                            </button>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" class="px-6 py-8 text-center text-gray-500">
+                            <div class="flex flex-col items-center">
+                                <i class="fas fa-users text-4xl mb-3 text-gray-300"></i>
+                                <p>No applicants found</p>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
     </div>
 </div>
 
 <script>
+    // Initialize AOS
+    AOS.init({
+        duration: 800,
+        once: true,
+        offset: 100
+    });
+
+    function updateStatus(email, position, status) {
+        if (confirm(`Are you sure you want to mark this applicant as ${status}?`)) {
+            const csrfToken = document.querySelector('input[name="csrfmiddlewaretoken"]').value;
+            
+            // Fetch applicant ID based on email and position
+            fetch(`/api/applicants/?email=${email}&position=${position}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.length > 0) {
+                        const applicantId = data[0].id;  // Assuming the API returns a list of applicants
+                        
+                        // Update applicant status using ApplicantUpdateView
+                        fetch(`/api/applicants/${applicantId}/`, {
+                            method: 'PATCH',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRFToken': csrfToken,
+                            },
+                            body: JSON.stringify({ status: status })
+                        }).then(response => {
+                            if (response.ok) {
+                                showToast(`Applicant marked as ${status}`);
+                                window.location.reload();
+                            } else {
+                                response.json().then(data => {
+                                    showToast(`Error: ${data.error}`);
+                                });
+                            }
+                        });
+                    } else {
+                        showToast(`Error: Applicant not found`);
+                    }
+                });
+        }
+    }
+
     // Search functionality
     document.getElementById('searchInput').addEventListener('input', function(e) {
         const searchText = e.target.value.toLowerCase();
         const rows = document.querySelectorAll('tbody tr');
-        
         rows.forEach(row => {
             const text = row.textContent.toLowerCase();
             row.style.display = text.includes(searchText) ? '' : 'none';
+        });
+    });
+
+    // Status filter
+    document.getElementById('status-filter').addEventListener('change', function(e) {
+        const status = e.target.value;
+        const rows = document.querySelectorAll('tbody tr');
+        rows.forEach(row => {
+            if (!status || row.querySelector('td:nth-child(5)').textContent.trim() === status) {
+                row.style.display = '';
+            } else {
+                row.style.display = 'none';
+            }
         });
     });
 </script>

@@ -1,22 +1,370 @@
 {% extends "admin/base_admin.html" %}
-{% block title %}Admin Dashboard{% endblock %}
-{% block admin_content %}
-<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-    <div class="bg-white p-6 rounded-lg shadow-lg">
-        <h3 class="text-xl font-semibold mb-2">Total Interviews</h3>
-        <p class="text-3xl font-bold text-blue-600">{{ total_interviews }}</p>
-    </div>
-    <div class="bg-white p-6 rounded-lg shadow-lg">
-        <h3 class="text-xl font-semibold mb-2">Total Applicants</h3>
-        <p class="text-3xl font-bold text-green-600">{{ total_applicants }}</p>
-    </div>
-    <div class="bg-white p-6 rounded-lg shadow-lg">
-        <h3 class="text-xl font-semibold mb-2">Total Positions</h3>
-        <p class="text-3xl font-bold text-purple-600">{{ total_positions }}</p>
-    </div>
-    <div class="bg-white p-6 rounded-lg shadow-lg">
-        <h3 class="text-xl font-semibold mb-2">Total Questions</h3>
-        <p class="text-3xl font-bold text-orange-600">{{ total_questions }}</p>
-    </div>
+{% block title %}
+Admin Dashboard
+{% endblock %} 
+{% block extra_head %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.12.2/dist/gsap.min.js"></script>
+<script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+<link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet" />
+<link
+  href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
+  rel="stylesheet"
+/>
+
+<style>
+  .glassmorphism {
+    background: rgba(255, 255, 255, 0.7);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+  }
+  .chart-container {
+    transition: all 0.3s ease;
+  }
+  .chart-container:hover {
+    transform: translateY(-5px);
+  }
+  .progress-bar-animated {
+    animation: progress 1.5s ease-in-out;
+  }
+  @keyframes progress {
+    from {
+      width: 0;
+    }
+    to {
+      width: var(--progress-width);
+    }
+  }
+  .card-hover {
+    transition: all 0.3s ease;
+  }
+  .card-hover:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+  }
+</style>
+{% endblock %} {% block admin_content %}
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+<!-- Stats Cards Section -->
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+    <!-- Interview Stats Card -->
+    <a href="{% url 'manage_interviews' %}" class="bg-white p-6 rounded-xl shadow-lg card-hover group cursor-pointer">
+        <div class="flex items-center justify-between mb-4">
+            <h3 class="text-xl font-semibold text-gray-800 group-hover:text-blue-600">Interviews</h3>
+            <span class="p-2 bg-blue-100 rounded-lg group-hover:bg-blue-200">
+                <i class="fas fa-video text-blue-600"></i>
+            </span>
+        </div>
+        <p class="text-3xl font-bold text-blue-600" id="totalInterviews">{{ total_interviews }}</p>
+        <div class="mt-2 flex items-center text-sm text-gray-500">
+            <span class="{% if interview_growth >= 0 %}text-green-500{% else %}text-red-500{% endif %}">
+                <i class="fas {% if interview_growth >= 0 %}fa-arrow-up{% else %}fa-arrow-down{% endif %}"></i>
+                {{ interview_growth_abs }}%
+            </span>
+            <span class="ml-2">from last month</span>
+        </div>
+        <div class="mt-4 h-2 bg-gray-100 rounded-full overflow-hidden">
+            <div class="h-full bg-blue-500 rounded-full progress-bar-animated" 
+                 style="--progress-width: {{ completion_rate }}%"></div>
+        </div>
+        <p class="text-xs text-gray-500 mt-1">{{ completion_rate }}% completion rate</p>
+    </a>
+
+    <!-- Applicant Stats Card -->
+    <a href="{% url 'manage_applicants' %}" class="bg-white p-6 rounded-xl shadow-lg card-hover group cursor-pointer">
+        <div class="flex items-center justify-between mb-4">
+            <h3 class="text-xl font-semibold text-gray-800 group-hover:text-green-600">Applicants</h3>
+            <span class="p-2 bg-green-100 rounded-lg group-hover:bg-green-200">
+                <i class="fas fa-users text-green-600"></i>
+            </span>
+        </div>
+        <p class="text-3xl font-bold text-green-600" id="totalApplicants">{{ total_applicants }}</p>
+        <div class="mt-2 flex items-center text-sm text-gray-500">
+            <span class="text-green-500">{{ status_distribution.0.count }}</span>
+            <span class="ml-2">pending applications</span>
+        </div>
+        <div class="mt-4 h-2 bg-gray-100 rounded-full overflow-hidden">
+            <div class="h-full bg-green-500 rounded-full progress-bar-animated" 
+                 style="--progress-width: {{ selection_rate }}%"></div>
+        </div>
+        <p class="text-xs text-gray-500 mt-1">{{ selection_rate }}% selection rate</p>
+    </a>
+
+    <!-- Position Stats Card -->
+    <a href="{% url 'manage_positions' %}" class="bg-white p-6 rounded-xl shadow-lg card-hover group cursor-pointer">
+        <div class="flex items-center justify-between mb-4">
+            <h3 class="text-xl font-semibold text-gray-800 group-hover:text-purple-600">Positions</h3>
+            <span class="p-2 bg-purple-100 rounded-lg group-hover:bg-purple-200">
+                <i class="fas fa-briefcase text-purple-600"></i>
+            </span>
+        </div>
+        <p class="text-3xl font-bold text-purple-600" id="totalPositions">{{ total_positions }}</p>
+        <div class="mt-2 flex items-center text-sm text-gray-500">
+            <span class="text-purple-500">
+                <i class="fas fa-plus"></i> {{ new_positions_count }}
+            </span>
+            <span class="ml-2">new this month</span>
+        </div>
+        <div class="mt-4 h-2 bg-gray-100 rounded-full overflow-hidden">
+            <div class="h-full bg-purple-500 rounded-full progress-bar-animated" 
+                 style="--progress-width: {{ position_fill_rate }}%"></div>
+        </div>
+        <p class="text-xs text-gray-500 mt-1">{{ position_fill_rate }}% positions filled</p>
+    </a>
+
+    <!-- Questions Stats Card -->
+    <a href="{% url 'manage_questions' %}" class="bg-white p-6 rounded-xl shadow-lg card-hover group cursor-pointer">
+        <div class="flex items-center justify-between mb-4">
+            <h3 class="text-xl font-semibold text-gray-800 group-hover:text-orange-600">Questions</h3>
+            <span class="p-2 bg-orange-100 rounded-lg group-hover:bg-orange-200">
+                <i class="fas fa-question-circle text-orange-600"></i>
+            </span>
+        </div>
+        <p class="text-3xl font-bold text-orange-600" id="totalQuestions">{{ total_questions }}</p>
+        <div class="mt-2 flex items-center text-sm text-gray-500">
+            <span class="text-orange-500">{{ total_responses }}</span>
+            <span class="ml-2">total responses</span>
+        </div>
+        <div class="mt-4 h-2 bg-gray-100 rounded-full overflow-hidden">
+            <div class="h-full bg-orange-500 rounded-full progress-bar-animated" 
+                 style="--progress-width: {{ response_rate }}%"></div>
+        </div>
+        <p class="text-xs text-gray-500 mt-1">{{ response_rate }}% response rate</p>
+    </a>
 </div>
+
+  <!-- Charts Section -->
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+    <!-- Applicant Distribution Chart -->
+    <div class="bg-white p-6 rounded-xl shadow-lg chart-container">
+      <div class="flex items-center justify-between mb-4">
+        <h3 class="text-lg font-semibold text-gray-800">
+          Applicant Distribution
+        </h3>
+        <select
+          id="chartView"
+          class="text-sm border rounded-lg px-3 py-2 bg-gray-50 hover:bg-gray-100 transition-colors duration-200"
+        >
+          <option value="status">By Status</option>
+          <option value="position">By Position</option>
+        </select>
+      </div>
+      <canvas id="applicantChart" height="300"></canvas>
+    </div>
+
+    <!-- Application Trends Chart -->
+    <div class="bg-white p-6 rounded-xl shadow-lg chart-container">
+      <div class="flex items-center justify-between mb-4">
+        <h3 class="text-lg font-semibold text-gray-800">Application Trends</h3>
+        <select
+          id="trendTimeframe"
+          class="text-sm border rounded-lg px-3 py-2 bg-gray-50 hover:bg-gray-100 transition-colors duration-200"
+        >
+          <option value="week">This Week</option>
+          <option value="month">This Month</option>
+          <option value="year">This Year</option>
+        </select>
+      </div>
+      <div id="trendsChart" style="height: 300px"></div>
+    </div>
+  </div>
+
+  <!-- Recent Activity and Stats -->
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <!-- Recent Activity -->
+    <div class="lg:col-span-2 bg-white p-6 rounded-xl shadow-lg">
+      <h3 class="text-lg font-semibold text-gray-800 mb-4">Recent Activity</h3>
+      <div class="space-y-4">
+        {% for activity in recent_activities %}
+        <div class="flex items-start p-4 bg-gray-50 rounded-lg">
+          <div
+            class="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center {% if activity.type == 'interview' %}bg-blue-100 {% elif activity.type == 'application' %}bg-green-100 {% else %}bg-purple-100{% endif %}"
+          >
+            <i
+              class="fas {% if activity.type == 'interview' %}fa-video {% elif activity.type == 'application' %}fa-user {% else %}fa-briefcase{% endif %} {% if activity.type == 'interview' %}text-blue-600 {% elif activity.type == 'application' %}text-green-600 {% else %}text-purple-600{% endif %}"
+            >
+            </i>
+          </div>
+          <div class="ml-4">
+            <p class="text-sm font-medium text-gray-900">
+              {{ activity.description }}
+            </p>
+            <p class="text-xs text-gray-500">
+              {{ activity.timestamp|timesince }} ago
+            </p>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+
+    <!-- Position Stats -->
+    <div class="bg-white p-6 rounded-xl shadow-lg">
+      <h3 class="text-lg font-semibold text-gray-800 mb-4">Position Stats</h3>
+      <div class="space-y-4">
+        {% for position in position_stats %}
+        <div class="p-4 bg-gray-50 rounded-lg">
+          <h4 class="font-medium text-gray-700 mb-2">{{ position.name }}</h4>
+          <div class="space-y-2">
+            <div class="flex justify-between text-sm">
+              <span class="text-gray-600">Selected</span>
+              <span class="text-green-600">{{ position.selected_count }}</span>
+            </div>
+            <div class="flex justify-between text-sm">
+              <span class="text-gray-600">Pending</span>
+              <span class="text-yellow-600">{{ position.pending_count }}</span>
+            </div>
+            <div class="h-2 bg-gray-200 rounded-full mt-2">
+              <div
+                class="h-full bg-blue-500 rounded-full"
+                style="width: {{ position.completion_percentage }}%"
+              ></div>
+            </div>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+      // Initialize Charts
+      const applicantChart = new Chart(
+          document.getElementById('applicantChart').getContext('2d'),
+          {
+              type: 'doughnut',
+              data: {
+                  labels: {{ status_labels|safe }},
+                  datasets: [{
+                      data: {{ status_data|safe }},
+                      backgroundColor: ['#FCD34D', '#34D399', '#F87171', '#60A5FA'],
+                      borderWidth: 0
+                  }]
+              },
+              options: {
+                  responsive: true,
+                  maintainAspectRatio: false,
+                  plugins: {
+                      legend: {
+                          position: 'bottom',
+                          labels: {
+                              usePointStyle: true,
+                              padding: 20,
+                              font: {
+                                  size: 12
+                              }
+                          }
+                      }
+                  },
+                  animation: {
+                      duration: 2000,
+                      easing: 'easeInOutQuart'
+                  }
+              }
+          }
+      );
+
+      // Initialize Trends Chart
+      const trendsChart = new ApexCharts(
+          document.getElementById('trendsChart'),
+          {
+              series: [{
+                  name: 'Applications',
+                  data: {{ trends_data|safe }}
+              }],
+              chart: {
+                  type: 'area',
+                  height: 300,
+                  toolbar: {
+                      show: false
+                  },
+                  animations: {
+                      enabled: true,
+                      easing: 'easeinout',
+                      speed: 800
+                  }
+              },
+              stroke: {
+                  curve: 'smooth',
+                  width: 2
+              },
+              fill: {
+                  type: 'gradient',
+                  gradient: {
+                      shadeIntensity: 1,
+                      opacityFrom: 0.7,
+                      opacityTo: 0.2
+                  }
+              },
+              xaxis: {
+                  categories: {{ trends_labels|safe }},
+                  labels: {
+                      formatter: function(value) {
+                          return new Date(value).toLocaleDateString('en-US', {
+                              month: 'short',
+                              day: 'numeric'
+                          });
+                      }
+                  }
+              }
+          }
+      );
+      trendsChart.render();
+
+      // Chart View Toggle
+      document.getElementById('chartView').addEventListener('change', function(e) {
+          const view = e.target.value;
+          fetch(`/api/applicant-distribution/?view=${view}`)
+              .then(response => response.json())
+              .then(data => {
+                  applicantChart.data.labels = data.labels;
+                  applicantChart.data.datasets[0].data = data.values;
+                  applicantChart.update();
+              });
+      });
+
+      // Trends Timeframe Toggle
+      document.getElementById('trendTimeframe').addEventListener('change', function(e) {
+          const timeframe = e.target.value;
+          fetch(`/api/application-trends/?timeframe=${timeframe}`)
+              .then(response => response.json())
+              .then(data => {
+                  trendsChart.updateSeries([{
+                      name: 'Applications',
+                      data: data.values
+                  }]);
+                  trendsChart.updateOptions({
+                      xaxis: {
+                          categories: data.labels
+                      }
+                  });
+              });
+      });
+
+      // Refresh Data Periodically
+      setInterval(() => {
+          fetch('/api/dashboard-stats/')
+              .then(response => response.json())
+              .then(data => {
+                  // Update counters
+                  document.getElementById('totalInterviews').textContent = data.total_interviews;
+                  document.getElementById('totalApplicants').textContent = data.total_applicants;
+                  document.getElementById('totalPositions').textContent = data.total_positions;
+                  document.getElementById('totalQuestions').textContent = data.total_questions;
+
+                  // Update charts
+                  applicantChart.data.datasets[0].data = data.status_data;
+                  applicantChart.update();
+
+                  trendsChart.updateSeries([{
+                      name: 'Applications',
+                      data: data.trends_data
+                  }]);
+              });
+      }, 300000); // Refresh every 5 minutes
+  });
+</script>
 {% endblock %}

@@ -1,6 +1,9 @@
-from datetime import datetime
+from datetime import datetime, timedelta, timezone
 import json
-
+from django.db.models import Count, Q, Avg
+from django.db.models.functions import ExtractMonth
+from django.utils import timezone
+from datetime import timedelta
 from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
@@ -26,6 +29,14 @@ from .serializers import (
     QuestionSerializer,
 )
 from django.db.models import Count
+from django.db import models 
+from django.db.models import Count, Q 
+import matplotlib.pyplot as plt
+import seaborn as sns
+import io
+import base64
+from django.db.models.functions import TruncMonth, ExtractMonth
+import pandas as pd
 
 
 @api_view(['POST'])
@@ -69,19 +80,6 @@ def user_interviews(request):
     serializer = ApplicantSerializer(applicants, many=True)
     return Response(serializer.data, status=status.HTTP_200_OK)
 
-# @api_view(['POST'])
-# @parser_classes([MultiPartParser])
-# def applicant_response_create(request):
-#     try:
-#         serializer = ApplicantResponseSerializer(data=request.data)
-#         if serializer.is_valid():
-#             serializer.save()
-#             return Response({'success': True}, status=status.HTTP_201_CREATED)
-#         else:
-#             errors = serializer.errors
-#             return Response({'success': False, 'error': errors}, status=status.HTTP_400_BAD_REQUEST)
-#     except Exception as e:
-#         return Response({'success': False, 'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 @api_view(['POST'])
 @parser_classes([MultiPartParser])
@@ -177,11 +175,21 @@ def add_interview(request):
                 description=description,
                 status='pending'
             )
-            return JsonResponse({'message': 'Interview scheduled successfully'})
-        return JsonResponse({'error': 'Missing required fields'}, status=400)
+            # Return both status and message
+            return JsonResponse({
+                'status': 'success',
+                'message': 'Interview scheduled successfully'
+            })
+        return JsonResponse({
+            'status': 'error',
+            'message': 'Missing required fields'
+        }, status=400)
     except Exception as e:
-        return JsonResponse({'error': str(e)}, status=400)
-
+        return JsonResponse({
+            'status': 'error',
+            'message': str(e)
+        }, status=400)
+    
 # @login_required
 @require_http_methods(["POST"])
 def edit_interview(request, interview_id):
@@ -376,9 +384,10 @@ def manage_unique_applicants(request):
         'email', 
         'position',
         'position__name',
-        'fullname'
+        'fullname',
+        'status'
     ).annotate(
-        responses_count=Count('responses')  # Changed from 'applicantresponse' to 'responses'
+        responses_count=Count('responses')
     ).order_by('email')
     return render(request, 'admin/manage_unique_applicants.html', {
         'unique_applicants': unique_applicants
@@ -427,3 +436,149 @@ def admin_login(request):
 def admin_logout(request):
     logout(request)
     return redirect('admin_login')
+
+
+
+
+@login_required
+def admin_dashboard(request):
+    try:
+        # Basic counts with safe completion rate calculation
+        total_interviews = Interview.objects.count()
+        completed_interviews = Interview.objects.filter(status='completed').count()
+        completion_rate = round((completed_interviews / total_interviews * 100) if total_interviews > 0 else 0)
+
+        # Calculate interview growth safely
+        last_month = timezone.now() - timedelta(days=30)
+        current_interviews = Interview.objects.filter(created_at__gte=last_month).count()
+        previous_interviews = Interview.objects.filter(
+            created_at__lt=last_month,
+            created_at__gte=last_month - timedelta(days=30)
+        ).count()
+        interview_growth = round(
+            ((current_interviews - previous_interviews) / previous_interviews * 100)
+            if previous_interviews > 0 else 0
+        )
+
+        # Safe calculation of performance metrics
+        total_applicants = Applicant.objects.count()
+        total_positions = Position.objects.count()
+        total_questions = Question.objects.count()
+        total_responses = ApplicantResponse.objects.count()
+        
+        # Calculate performance metrics safely
+        performance_metrics = [
+            {
+                'name': 'Selection Rate',
+                'value': round((Applicant.objects.filter(status='Selected').count() / total_applicants * 100)
+                             if total_applicants > 0 else 0),
+                'trend': 5
+            },
+            {
+                'name': 'Response Rate',
+                'value': round((total_responses / (total_interviews * total_questions) * 100)
+                             if (total_interviews * total_questions) > 0 else 0),
+                'trend': -2
+            },
+            {
+                'name': 'Position Fill Rate',
+                'value': round((Position.objects.filter(applicants__status='Selected')
+                              .distinct().count() / total_positions * 100)
+                             if total_positions > 0 else 0),
+                'trend': 3
+            }
+        ]
+
+        # Get application trends for current year by month
+        current_year = timezone.now().year
+        application_trends = (
+            Applicant.objects
+            .filter(created_at__year=current_year)
+            .annotate(
+                month=ExtractMonth('created_at')
+            )
+            .values('month')
+            .annotate(count=Count('id'))
+            .order_by('month')
+        )
+
+        # Format trend data
+        trend_data = {
+            'dates': [f"{current_year}-{str(entry['month']).zfill(2)}-01" for entry in application_trends],
+            'counts': [entry['count'] for entry in application_trends]
+        }
+
+        # Get recent activities efficiently using prefetch_related
+        recent_applications = (
+            Applicant.objects
+            .select_related('position')
+            .order_by('-created_at')[:5]
+        )
+
+        recent_interviews = (
+            Interview.objects
+            .order_by('-created_at')[:5]
+        )
+
+        # Combine and sort activities
+        recent_activities = []
+        for app in recent_applications:
+            recent_activities.append({
+                'type': 'application',
+                'description': f"{app.fullname} applied for {app.position.name}",
+                'timestamp': app.created_at
+            })
+        
+        for interview in recent_interviews:
+            recent_activities.append({
+                'type': 'interview',
+                'description': f"New interview scheduled: {interview.title}",
+                'timestamp': interview.created_at
+            })
+        
+        recent_activities.sort(key=lambda x: x['timestamp'], reverse=True)
+
+        # Get status distribution
+        status_distribution = (
+            Applicant.objects
+            .values('status')
+            .annotate(count=Count('id'))
+            .order_by('status')
+        )
+
+        # Get position statistics with applicant counts
+        position_stats = (
+            Position.objects
+            .annotate(
+                applicant_count=Count('applicants'),
+                selected_count=Count('applicants', filter=Q(applicants__status='Selected')),
+                rejected_count=Count('applicants', filter=Q(applicants__status='Rejected')),
+                pending_count=Count('applicants', filter=Q(applicants__status='Pending'))
+            )
+            .order_by('name')
+        )
+
+        context = {
+            'total_interviews': total_interviews,
+            'completion_rate': completion_rate,
+            'interview_growth': interview_growth,
+            'interview_growth_abs': abs(interview_growth),
+            'total_applicants': total_applicants,
+            'total_positions': total_positions,
+            'total_questions': total_questions,
+            'total_responses': total_responses,
+            'status_distribution': list(status_distribution),
+            'position_stats': position_stats,
+            'application_trends': trend_data,
+            'performance_metrics': performance_metrics,
+            'recent_activities': recent_activities[:10]
+        }
+        
+        return render(request, 'admin/dashboard.html', context)
+
+    except Exception as e:
+        messages.error(request, f'Error loading dashboard: {str(e)}')
+        return render(request, 'admin/dashboard.html', {
+            'error': 'Error loading dashboard data. Please try again.'
+        })
+    
