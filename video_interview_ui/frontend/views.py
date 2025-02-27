@@ -136,13 +136,20 @@ def interviews(request):
         positions_response.raise_for_status()
         positions = positions_response.json()
 
+        # Fetch responses
+        responses_response = requests.get(f"{BACKEND_API_URL}/applicant-responses/")
+        responses_response.raise_for_status()
+        responses = responses_response.json()
+
         # Filter applicants based on the current user's email
         user_applicants = [applicant for applicant in applicants if applicant['email'] == user_email]
 
-        # Add position details to each applicant
+        # Add position details and response details to each applicant
         for applicant in user_applicants:
             applicant['total_questions'] = applicant.get('total_questions', 0)
-            applicant['total_score'] = applicant.get('total_score', 0)
+            applicant['total_score'] = sum(response['score'] if response['score'] is not None else 0 for response in responses if response['applicant'] == applicant['id'])
+            applicant['response_date'] = next((response.get('created_at') for response in responses if response['applicant'] == applicant['id']), None)
+            applicant['position_id'] = applicant.get('position', None)
             applicant['position_details'] = next((position for position in positions if position['id'] == applicant['position']), None)
 
     except RequestException as e:
@@ -154,6 +161,7 @@ def interviews(request):
 
     return render(request, "frontend/interviews.html", {"applicants": user_applicants, "user_email": user_email, "user_fullname": request.user.get_full_name()})
 
+
 @login_required(login_url='login')
 def view_applicant_responses(request, email, position_id):
     try:
@@ -162,20 +170,39 @@ def view_applicant_responses(request, email, position_id):
         responses_response.raise_for_status()
         responses = responses_response.json()
 
-        # Fetch questions
-        questions_response = requests.get(f"{BACKEND_API_URL}/questions/")
+        # Fetch questions for the specific position
+        questions_response = requests.get(f"{BACKEND_API_URL}/questions/?position={position_id}")
         questions_response.raise_for_status()
         questions = questions_response.json()
 
-        # Add question details to each response
+        # Add question details to each response and filter out responses without questions
         for response in responses:
             response['question_details'] = next((question for question in questions if question['id'] == response['question']), None)
+
+        # Filter out responses without question details
+        responses = [response for response in responses if response['question_details']]
+
+        # Sort responses by question order (if available)
+        responses.sort(key=lambda x: x['question_details'].get('order', 0))
+
+        # Calculate total score and total questions
+        total_score = sum(response['score'] if response['score'] is not None else 0 for response in responses)
+        total_questions = len(questions)
 
     except RequestException as e:
         print(f"Network error: {e}")
         responses = []
+        total_score = 0
+        total_questions = 0
     except ValueError as e:
         print(f"JSON decode error: {e}")
         responses = []
+        total_score = 0
+        total_questions = 0
 
-    return render(request, "frontend/view_applicant_responses.html", {"responses": responses})
+    return render(request, "frontend/view_applicant_responses.html", {
+        "responses": responses,
+        "position_id": position_id,
+        "total_score": total_score,
+        "total_questions": total_questions
+    })

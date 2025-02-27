@@ -4,6 +4,17 @@
 {% load response_filters %}
 {% block title %}Interviews{% endblock %}
 
+{% block extra_head %}
+<link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+<style>
+    .congrats-animation, .sad-animation {
+        width: 100px;
+        height: 100px;
+        margin: 0 auto;
+    }
+</style>
+{% endblock %}
+
 {% block content %}
 <div class="min-h-screen flex flex-col items-center justify-center py-12 px-4 sm:px-6 lg:px-8 bg-gradient-to-r from-indigo-600 to-purple-600">
     <div class="max-w-4xl w-full space-y-8 bg-white p-8 rounded-xl shadow-lg transform hover:shadow-2xl transition-all duration-300">
@@ -16,7 +27,7 @@
         <div id="conducted-interviews" class="space-y-4">
             {% if applicants %}
                 {% for applicant in applicants %}
-                    <div class="p-4 bg-gradient-to-r from-blue-50 to-blue-100 rounded-lg shadow-md transform hover:scale-105 transition-all duration-300">
+                    <div class="p-4 bg-gradient-to-r from-blue-50 to-blue-100 rounded-lg shadow-md transform hover:scale-105 transition-all duration-300" data-aos="fade-up">
                         <h3 class="text-lg font-semibold text-gray-800">{{ applicant.fullname }}</h3>
                         <p class="text-sm text-gray-600">Email: {{ applicant.email }}</p>
                         <p class="text-sm text-gray-600">Position: {{ applicant.position_details.name }}</p>
@@ -28,8 +39,13 @@
                                 {{ applicant.status }}
                             </span>
                         </p>
+                        {% if applicant.status == 'Selected' %}
+                            <div class="congrats-animation" id="congrats-animation-{{ applicant.id }}"></div>
+                        {% elif applicant.status == 'Rejected' %}
+                            <div class="sad-animation" id="sad-animation-{{ applicant.id }}"></div>
+                        {% endif %}
                         <p class="text-sm text-gray-600">Applied on: {{ applicant.created_at|date:"F j, Y" }}</p>
-                        <p class="text-sm text-gray-600">Interview Date: {{ applicant.interview_date|date:"F j, Y" }}</p>
+                        <p class="text-sm text-gray-600">Response Date: {{ applicant.response_date|date:"F j, Y" }}</p>
                         <p class="text-sm text-gray-600">Total Score: {{ applicant.total_score }} / {{ applicant.total_questions|default:0|multiply:10 }}</p>
                         {% if applicant.position_id %}
                             <a href="{% url 'view_applicant_responses' applicant.email applicant.position_id %}" class="text-blue-600 hover:underline">View Detailed Responses</a>
@@ -44,4 +60,35 @@
         </div>
     </div>
 </div>
+
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bodymovin/5.7.6/lottie.min.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        AOS.init();
+
+        {% for applicant in applicants %}
+            {% if applicant.status == 'Selected' %}
+                lottie.loadAnimation({
+                    container: document.getElementById('congrats-animation-{{ applicant.id }}'),
+                    renderer: 'svg',
+                    loop: true,
+                    autoplay: true,
+                    path: 'https://assets10.lottiefiles.com/packages/lf20_4kx2q32n.json' // URL to your Lottie animation JSON file
+                });
+            {% elif applicant.status == 'Rejected' %}
+                lottie.loadAnimation({
+                    container: document.getElementById('sad-animation-{{ applicant.id }}'),
+                    renderer: 'svg',
+                    loop: true,
+                    autoplay: true,
+                    path: 'https://assets10.lottiefiles.com/packages/lf20_5c8qzv.json' // URL to your Lottie animation JSON file
+                });
+            {% endif %}
+        {% endfor %}
+    });
+</script>
 {% endblock %}
