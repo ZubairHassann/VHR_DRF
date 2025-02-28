@@ -4,86 +4,199 @@
 {% load response_filters %}
 
 {% block extra_head %}
-<link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
-<script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+<link href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <style>
-    .gradient-border {
+    .glass-container {
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        box-shadow: 0 8px 32px rgba(31, 38, 135, 0.15);
+    }
+
+    .card-hover {
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .card-hover:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 12px 24px rgba(0, 0, 0, 0.1);
+    }
+
+    .stat-card {
+        background: linear-gradient(135deg, rgba(255,255,255,0.9) 0%, rgba(255,255,255,0.7) 100%);
+        backdrop-filter: blur(10px);
+        border-radius: 16px;
+        padding: 1.5rem;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+        transition: all 0.3s ease;
+    }
+
+    .stat-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 15px rgba(0, 0, 0, 0.1);
+    }
+
+    .fancy-border {
         position: relative;
-        background: linear-gradient(60deg, #f79533, #f37055, #ef4e7b, #a166ab, #5073b8, #1098ad, #07b39b, #6fba82);
+        border-radius: 16px;
+        background: linear-gradient(45deg, #3B82F6, #10B981, #6366F1);
         padding: 3px;
-        border-radius: 1rem;
-        animation: animatedgradient 6s ease alternate infinite;
-        background-size: 300% 300%;
+        transition: all 0.3s ease;
     }
 
-    .gradient-border-content {
+    .fancy-border:hover {
+        background: linear-gradient(45deg, #6366F1, #10B981, #3B82F6);
+    }
+
+    .fancy-content {
         background: white;
-        border-radius: 0.9rem;
+        border-radius: 14px;
+        height: 100%;
     }
 
-    @keyframes animatedgradient {
-        0% { background-position: 0% 50%; }
-        50% { background-position: 100% 50%; }
-        100% { background-position: 0% 50%; }
+    @keyframes float {
+        0% { transform: translateY(0px); }
+        50% { transform: translateY(-5px); }
+        100% { transform: translateY(0px); }
     }
 
-    .table-row-animate {
-        transition: all 0.3s ease;
-    }
-
-    .table-row-animate:hover {
-        transform: translateX(10px);
-        background: rgba(59, 130, 246, 0.05);
-    }
-
-    .action-button {
-        transition: all 0.2s ease;
-    }
-
-    .action-button:hover {
-        transform: translateY(-2px);
-    }
-
-    .status-badge {
-        transition: all 0.3s ease;
-    }
-
-    .status-badge:hover {
-        transform: scale(1.1);
-    }
-
-    .th-with-padding {
-        padding-right: 20px; /* adjust the value as needed */
-      }
-
-    .th-with-space {
-    white-space: pre;
+    .floating {
+        animation: float 3s ease-in-out infinite;
     }
 </style>
 {% endblock %}
 
 {% block admin_content %}
-<div class="gradient-border" data-aos="fade-up">
-    <div class="gradient-border-content">
-        <!-- Search and Filter -->
-        <div class="p-6 bg-gray-50 border-b rounded-t-xl">
-            <div class="flex flex-col md:flex-row items-center space-y-4 md:space-y-0 md:space-x-4">
-                <div class="flex-1 w-full">
-                    <div class="relative">
-                        <input type="text" id="searchInput" placeholder="Search by email or position..." 
-                               class="w-full px-4 py-3 pl-10 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-300">
-                        <i class="fas fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <!-- Stats Overview -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+        <!-- Total Applicants Card -->
+        <div class="stat-card">
+            <div class="flex justify-between items-center">
+                <div>
+                    <p class="text-gray-500 text-sm font-medium">Total Applicants</p>
+                    <p class="text-3xl font-bold text-gray-900">{{ total_count }}</p>
+                </div>
+                <div class="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center">
+                    <i class="fas fa-users text-blue-600 text-xl"></i>
+                </div>
+            </div>
+            <div class="mt-4">
+                <div class="relative pt-1">
+                    <div class="flex mb-2 items-center justify-between">
+                        <div class="text-xs text-gray-500">Application Rate</div>
+                        <div class="text-xs font-semibold text-blue-600">85%</div>
+                    </div>
+                    <div class="overflow-hidden h-2 text-xs flex rounded bg-blue-100">
+                        <div class="w-4/5 bg-blue-500 rounded-full"></div>
                     </div>
                 </div>
-                <select id="status-filter" 
-                        class="w-full md:w-48 px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-300">
-                    <option value="">📋 All Status</option>
-                    <option value="Pending">📊 Pending</option>
-                    <option value="Selected">✅ Selected</option>
-                    <option value="Rejected">❌ Rejected</option>
-                </select>
             </div>
         </div>
+
+        <!-- Selected Applicants Card -->
+<div class="stat-card">
+    <div class="flex justify-between items-center">
+        <div>
+            <p class="text-gray-500 text-sm font-medium">Selected</p>
+            <p class="text-3xl font-bold text-green-600">{{ selected_count }}</p>
+        </div>
+        <div class="w-12 h-12 rounded-full bg-green-100 flex items-center justify-center">
+            <i class="fas fa-check text-green-600 text-xl"></i>
+        </div>
+    </div>
+    <div class="mt-4">
+        <div class="relative pt-1">
+            <div class="flex mb-2 items-center justify-between">
+                <div class="text-xs text-gray-500">Selection Rate</div>
+                <div class="text-xs font-semibold text-green-600">{{ selection_rate }}%</div>
+            </div>
+            <div class="overflow-hidden h-2 text-xs flex rounded bg-green-100">
+                <div class="bg-green-500 rounded-full" style="width: {{ selection_rate }}%"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Pending Applicants Card -->
+<div class="stat-card">
+    <div class="flex justify-between items-center">
+        <div>
+            <p class="text-gray-500 text-sm font-medium">Pending</p>
+            <p class="text-3xl font-bold text-yellow-600">{{ pending_count }}</p>
+        </div>
+        <div class="w-12 h-12 rounded-full bg-yellow-100 flex items-center justify-center">
+            <i class="fas fa-clock text-yellow-600 text-xl"></i>
+        </div>
+    </div>
+    <div class="mt-4">
+        <div class="relative pt-1">
+            <div class="flex mb-2 items-center justify-between">
+                <div class="text-xs text-gray-500">Processing Rate</div>
+                <div class="text-xs font-semibold text-yellow-600">{{ processing_rate }}%</div>
+            </div>
+            <div class="overflow-hidden h-2 text-xs flex rounded bg-yellow-100">
+                <div class="bg-yellow-500 rounded-full" style="width: {{ processing_rate }}%"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Rejected Applicants Card -->
+<div class="stat-card">
+    <div class="flex justify-between items-center">
+        <div>
+            <p class="text-gray-500 text-sm font-medium">Rejected</p>
+            <p class="text-3xl font-bold text-red-600">{{ rejected_count }}</p>
+        </div>
+        <div class="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center">
+            <i class="fas fa-times text-red-600 text-xl"></i>
+        </div>
+    </div>
+    <div class="mt-4">
+        <div class="relative pt-1">
+            <div class="flex mb-2 items-center justify-between">
+                <div class="text-xs text-gray-500">Rejection Rate</div>
+                <div class="text-xs font-semibold text-red-600">{{ rejection_rate }}%</div>
+            </div>
+            <div class="overflow-hidden h-2 text-xs flex rounded bg-red-100">
+                <div class="bg-red-500 rounded-full" style="width: {{ rejection_rate }}%"></div>
+            </div>
+        </div>
+    </div>
+</div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="fancy-border">
+        <div class="fancy-content">
+            <!-- Enhanced Search and Filter -->
+            <div class="p-6 bg-gradient-to-r from-blue-50 to-indigo-50">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div class="relative">
+                        <input type="text" id="searchInput" 
+                               placeholder="Search applicants..." 
+                               class="w-full pl-10 pr-4 py-2 rounded-xl border-0 ring-1 ring-gray-200 focus:ring-2 focus:ring-blue-500 transition-all duration-300">
+                        <i class="fas fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+                    </div>
+                    <div class="flex space-x-4">
+                        <select id="status-filter" class="w-full px-4 py-2 rounded-xl border-0 ring-1 ring-gray-200 focus:ring-2 focus:ring-blue-500 transition-all duration-300">
+                            <option value="">All Status</option>
+                            <option value="Pending">⏳ Pending</option>
+                            <option value="Selected">✅ Selected</option>
+                            <option value="Rejected">❌ Rejected</option>
+                        </select>
+                    </div>
+                    <div class="flex justify-end">
+                        <button onclick="exportToCSV()" 
+                                class="px-4 py-2 bg-green-500 text-white rounded-xl hover:bg-green-600 transition-all duration-300 flex items-center">
+                            <i class="fas fa-download mr-2"></i>Export Data
+                        </button>
+                    </div>
+                </div>
+            </div>
 
         <!-- Applicants List -->
         <div class="overflow-x-auto">

@@ -1,66 +1,256 @@
-<!-- filepath: /home/reicho/Mega Sync Backups/Coding/VHR/VHR_DRF/video_interview_ui/frontend/templates/frontend/interviews.html -->
-
 {% extends 'base.html' %}
 {% load response_filters %}
-{% block title %}Interviews{% endblock %}
+{% block title %}Interview Dashboard{% endblock %}
 
 {% block extra_head %}
 <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 <style>
-    .congrats-animation, .sad-animation {
-        width: 100px;
-        height: 100px;
+    .card-hover {
+        transition: all 0.3s ease;
+    }
+    
+    .card-hover:hover {
+        transform: translateY(-10px);
+        box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+    }
+    
+    .status-badge {
+        transition: all 0.3s ease;
+    }
+    
+    .status-badge:hover {
+        transform: scale(1.05);
+    }
+    
+    .animation-container {
+        width: 120px;
+        height: 120px;
         margin: 0 auto;
+        opacity: 0.9;
+    }
+    
+    .bg-gradient {
+        background-image: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    }
+    
+    .glass-effect {
+        background: rgba(255, 255, 255, 0.25);
+        backdrop-filter: blur(4px);
+        -webkit-backdrop-filter: blur(4px);
+        border: 1px solid rgba(255, 255, 255, 0.18);
+    }
+    
+    .pulse {
+        animation: pulse 2s infinite;
+    }
+    
+    @keyframes pulse {
+        0% {
+            transform: scale(1);
+        }
+        50% {
+            transform: scale(1.05);
+        }
+        100% {
+            transform: scale(1);
+        }
+    }
+    
+    .search-input:focus {
+        box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.5);
+    }
+    
+    .no-interviews {
+        min-height: 200px;
     }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="min-h-screen flex flex-col items-center justify-center py-12 px-4 sm:px-6 lg:px-8 bg-gradient-to-r from-indigo-600 to-purple-600">
-    <div class="max-w-4xl w-full space-y-8 bg-white p-8 rounded-xl shadow-lg transform hover:shadow-2xl transition-all duration-300">
+<div class="min-h-screen bg-gradient flex flex-col items-center justify-start py-12 px-4 sm:px-6 lg:px-8">
+    <div class="max-w-6xl w-full space-y-8 glass-effect p-8 rounded-xl shadow-xl">
         <div class="text-center">
-            <h2 class="text-3xl font-extrabold text-gray-900 mb-2">Interviews</h2>
-            <p class="text-sm text-gray-600">Your conducted interviews</p>
-            <p class="text-sm text-gray-600">User: {{ user_fullname }} ({{ user_email }})</p>
+            <h1 class="text-4xl font-extrabold text-gray mb-2 tracking-tight">
+                <i class="fas fa-user-tie mr-2"></i>Interview Dashboard
+            </h1>
+            <div class="max-w-3xl mx-auto">
+                <p class="text-gray text-opacity-80 mb-2">Track and manage your interviews in one place</p>
+                <div class="bg-white bg-opacity-20 rounded-lg p-3 inline-block mb-4">
+                    <p class="text-gray">
+                        <i class="fas fa-user-circle mr-2"></i>{{ user_fullname }} 
+                        <span class="text-gray text-opacity-70 text-sm ml-2">({{ user_email }})</span>
+                    </p>
+                </div>
+            </div>
+            
+            <!-- Dashboard Stats -->
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8 mt-6">
+                <div class="bg-white bg-opacity-20 rounded-lg p-4 shadow-lg pulse">
+                    <i class="fas fa-users text-gray text-3xl mb-2"></i>
+                    <h3 class="text-gray text-xl font-bold">Total Applied Positions</h3>
+                    <p class="text-gray text-2xl font-semibold">{{ total_count }}</p>
+                </div>
+                <div class="bg-white bg-opacity-20 rounded-lg p-4 shadow-lg pulse">
+                    <i class="fas fa-check-circle text-gray text-3xl mb-2"></i>
+                    <h3 class="text-gray text-xl font-bold">Selected</h3>
+                    <p class="text-gray text-2xl font-semibold">{{ selected_count }}</p>
+                </div>
+                <div class="bg-white bg-opacity-20 rounded-lg p-4 shadow-lg pulse">
+                    <i class="fas fa-clock text-gray text-3xl mb-2"></i>
+                    <h3 class="text-gray text-xl font-bold">Pending</h3>
+                    <p class="text-gray text-2xl font-semibold">{{ pending_count }}</p>
+                </div>
+                <div class="bg-white bg-opacity-20 rounded-lg p-4 shadow-lg pulse">
+                    <i class="fas fa-times-circle text-gray text-3xl mb-2"></i>
+                    <h3 class="text-gray text-xl font-bold">Rejected</h3>
+                    <p class="text-gray text-2xl font-semibold">{{ rejected_count }}</p>
+                </div>
+            </div>
+            
+            <!-- Search & Filter -->
+            <div class="mb-6 flex flex-col sm:flex-row justify-between items-center gap-4">
+                <div class="relative w-full sm:w-64">
+                    <input type="text" id="search-input" class="w-full px-4 py-2 rounded-lg bg-white bg-opacity-20 text-gray placeholder-white placeholder-opacity-70 border-none search-input" placeholder="Search candidates...">
+                    <i class="fas fa-search absolute right-3 top-3 text-gray text-opacity-70"></i>
+                </div>
+                <div class="flex space-x-2">
+                    <select id="status-filter" class="px-4 py-2 rounded-lg bg-white bg-opacity-20 text-gray border-none cursor-pointer">
+                        <option value="all">All Status</option>
+                        <option value="Pending">Pending</option>
+                        <option value="Selected">Selected</option>
+                        <option value="Rejected">Rejected</option>
+                    </select>
+                    <select id="sort-by" class="px-4 py-2 rounded-lg bg-white bg-opacity-20 text-gray border-none cursor-pointer">
+                        <option value="date-desc">Newest First</option>
+                        <option value="date-asc">Oldest First</option>
+                        <option value="score-desc">Highest Score</option>
+                        <option value="score-asc">Lowest Score</option>
+                    </select>
+                </div>
+            </div>
         </div>
 
-        <div id="conducted-interviews" class="space-y-4">
+        <div id="conducted-interviews" class="space-y-6">
             {% if applicants %}
-                {% for applicant in applicants %}
-                    <div class="p-4 bg-gradient-to-r from-blue-50 to-blue-100 rounded-lg shadow-md transform hover:scale-105 transition-all duration-300" data-aos="fade-up">
-                        <h3 class="text-lg font-semibold text-gray-800">{{ applicant.fullname }}</h3>
-                        <p class="text-sm text-gray-600">Email: {{ applicant.email }}</p>
-                        <p class="text-sm text-gray-600">Position: {{ applicant.position_details.name }}</p>
-                        <p class="text-sm text-gray-600">Status: 
-                            <span class="px-2 py-1 rounded-full 
-                                {% if applicant.status == 'Pending' %}bg-yellow-100 text-yellow-800
-                                {% elif applicant.status == 'Selected' %}bg-green-100 text-green-800
-                                {% else %}bg-red-100 text-red-800{% endif %}">
-                                {{ applicant.status }}
-                            </span>
-                        </p>
-                        {% if applicant.status == 'Selected' %}
-                            <div class="congrats-animation" id="congrats-animation-{{ applicant.id }}"></div>
-                        {% elif applicant.status == 'Rejected' %}
-                            <div class="sad-animation" id="sad-animation-{{ applicant.id }}"></div>
-                        {% endif %}
-                        <p class="text-sm text-gray-600">Applied on: {{ applicant.created_at|date:"F j, Y" }}</p>
-                        <p class="text-sm text-gray-600">Response Date: {{ applicant.response_date|date:"F j, Y" }}</p>
-                        <p class="text-sm text-gray-600">Total Score: {{ applicant.total_score }} / {{ applicant.total_questions|default:0|multiply:10 }}</p>
-                        {% if applicant.position_id %}
-                            <a href="{% url 'view_applicant_responses' applicant.email applicant.position_id %}" class="text-blue-600 hover:underline">View Detailed Responses</a>
-                        {% else %}
-                            <span class="text-gray-600">Position ID not available</span>
-                        {% endif %}
-                    </div>
-                {% endfor %}
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {% for applicant in applicants %}
+                        <div class="bg-white rounded-xl shadow-lg overflow-hidden card-hover" data-aos="fade-up" data-aos-delay="{{ forloop.counter|multiply:50 }}" data-status="{{ applicant.status }}" data-score="{{ applicant.total_score }}" data-date="{{ applicant.created_at|date:'Y-m-d' }}">
+                            <div class="p-1 
+                                {% if applicant.status == 'Pending' %}bg-yellow-500
+                                {% elif applicant.status == 'Selected' %}bg-green-500
+                                {% else %}bg-red-500{% endif %}">
+                            </div>
+                            <div class="p-5">
+                                <div class="flex justify-between items-start mb-4">
+                                    <div>
+                                        <h3 class="text-xl font-bold text-gray-800 mb-1">{{ applicant.fullname }}</h3>
+                                        <p class="text-sm text-gray-600">
+                                            <i class="fas fa-briefcase text-gray-400 mr-1"></i>{{ applicant.position_details.name }}
+                                        </p>
+                                    </div>
+                                    <span class="status-badge px-3 py-1 rounded-full text-sm font-medium
+                                        {% if applicant.status == 'Pending' %}bg-yellow-100 text-yellow-800
+                                        {% elif applicant.status == 'Selected' %}bg-green-100 text-green-800
+                                        {% else %}bg-red-100 text-red-800{% endif %}">
+                                        {% if applicant.status == 'Pending' %}<i class="fas fa-hourglass-half mr-1"></i>
+                                        {% elif applicant.status == 'Selected' %}<i class="fas fa-check-circle mr-1"></i>
+                                        {% else %}<i class="fas fa-times-circle mr-1"></i>{% endif %}
+                                        {{ applicant.status }}
+                                    </span>
+                                </div>
+                                
+                                <div class="space-y-2 mb-4">
+                                    <p class="text-sm text-gray-600">
+                                        <i class="fas fa-envelope text-gray-400 mr-1"></i>{{ applicant.email }}
+                                    </p>
+                                    <p class="text-sm text-gray-600">
+                                        <i class="fas fa-calendar-alt text-gray-400 mr-1"></i>Applied: {{ applicant.created_at|date:"M j, Y" }}
+                                    </p>
+                                    <p class="text-sm text-gray-600">
+                                        <i class="fas fa-reply text-gray-400 mr-1"></i>Responded: {{ applicant.response_date|date:"M j, Y"|default:"N/A" }}
+                                    </p>
+                                </div>
+                                
+                                <!-- Score Meter -->
+                                <div class="mb-4">
+                                    <div class="flex justify-between items-center mb-1">
+                                        <p class="text-sm font-medium text-gray-700">Interview Score</p>
+                                        <p class="text-sm font-medium text-gray-700">{{ applicant.total_score }} / {{ applicant.total_questions|default:0|multiply:10 }}</p>
+                                    </div>
+                                    <div class="w-full bg-gray-200 rounded-full h-2.5">
+                                        {% with total=applicant.total_questions|default:0|multiply:10 %}
+                                            {% if total > 0 %}
+                                                {% with percentage=applicant.total_score|default:0|floatformat:0|divisibleby:total|multiply:100 %}
+                                                <div class="h-2.5 rounded-full 
+                                                    {% if percentage < 50 %}bg-red-500
+                                                    {% elif percentage < 70 %}bg-yellow-500
+                                                    {% else %}bg-green-500{% endif %}" 
+                                                    style="width: {% widthratio applicant.total_score|default:0 total 100 %}%">
+                                                </div>
+                                                {% endwith %}
+                                            {% else %}
+                                                <div class="h-2.5 rounded-full bg-gray-400" style="width: 0%"></div>
+                                            {% endif %}
+                                        {% endwith %}
+                                    </div>
+                                </div>
+                                
+                                {% if applicant.status == 'Selected' %}
+                                    <div class="animation-container" id="congrats-animation-{{ applicant.id }}"></div>
+                                {% elif applicant.status == 'Rejected' %}
+                                    <div class="animation-container" id="sad-animation-{{ applicant.id }}"></div>
+                                {% endif %}
+                                
+                                <div class="mt-4 flex justify-between items-center">
+                                    {% if applicant.position_id %}
+                                        <a href="{% url 'view_applicant_responses' applicant.email applicant.position_id %}" class="inline-flex items-center px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-gray text-sm font-medium rounded-md transition-colors duration-300">
+                                            <i class="fas fa-eye mr-2"></i>View Details
+                                        </a>
+                                    {% else %}
+                                        <span class="text-gray-500 text-sm"><i class="fas fa-exclamation-circle mr-1"></i>Position unavailable</span>
+                                    {% endif %}
+                                    
+                                    <button class="text-gray-500 hover:text-gray-700 transition-colors duration-300">
+                                        <i class="fas fa-ellipsis-v"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
             {% else %}
-                <p class="text-center text-gray-600">No interviews found.</p>
+                <div class="bg-white bg-opacity-90 rounded-xl shadow-lg p-8 text-center no-interviews flex flex-col items-center justify-center">
+                    <img src="https://assets10.lottiefiles.com/packages/lf20_hl5n0bwb.json" alt="No interviews" class="w-40 h-40 mb-4" id="no-interviews-animation">
+                    <h3 class="text-xl font-semibold text-gray-800 mb-2">No Interviews Found</h3>
+                    <p class="text-gray-600 mb-4">You haven't conducted any interviews yet.</p>
+                    <a href="#" class="inline-flex items-center px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-gray text-sm font-medium rounded-md transition-colors duration-300">
+                        <i class="fas fa-plus mr-2"></i>Create New Interview
+                    </a>
+                </div>
             {% endif %}
         </div>
+        
+        <!-- Pagination -->
+        {% if applicants|length > 9 %}
+        <div class="mt-8 flex justify-center">
+            <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
+                <a href="#" class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-white border-opacity-20 bg-white bg-opacity-10 text-sm font-medium text-gray hover:bg-white hover:bg-opacity-20">
+                    <i class="fas fa-chevron-left"></i>
+                </a>
+                <a href="#" class="relative inline-flex items-center px-4 py-2 border border-white border-opacity-20 bg-white bg-opacity-20 text-sm font-medium text-gray hover:bg-white hover:bg-opacity-30">1</a>
+                <a href="#" class="relative inline-flex items-center px-4 py-2 border border-white border-opacity-20 bg-white bg-opacity-10 text-sm font-medium text-gray hover:bg-white hover:bg-opacity-20">2</a>
+                <a href="#" class="relative inline-flex items-center px-4 py-2 border border-white border-opacity-20 bg-white bg-opacity-10 text-sm font-medium text-gray hover:bg-white hover:bg-opacity-20">3</a>
+                <span class="relative inline-flex items-center px-4 py-2 border border-white border-opacity-20 bg-white bg-opacity-10 text-sm font-medium text-gray">...</span>
+                <a href="#" class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-white border-opacity-20 bg-white bg-opacity-10 text-sm font-medium text-gray hover:bg-white hover:bg-opacity-20">
+                    <i class="fas fa-chevron-right"></i>
+                </a>
+            </nav>
+        </div>
+        {% endif %}
     </div>
 </div>
-
 {% endblock %}
 
 {% block extra_scripts %}
@@ -68,8 +258,14 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/bodymovin/5.7.6/lottie.min.js"></script>
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        AOS.init();
+        // Initialize animations
+        AOS.init({
+            duration: 800,
+            easing: 'ease-out',
+            once: true
+        });
 
+        // Load animations for each applicant
         {% for applicant in applicants %}
             {% if applicant.status == 'Selected' %}
                 lottie.loadAnimation({
@@ -77,7 +273,7 @@
                     renderer: 'svg',
                     loop: true,
                     autoplay: true,
-                    path: 'https://assets10.lottiefiles.com/packages/lf20_4kx2q32n.json' // URL to your Lottie animation JSON file
+                    path: 'https://assets10.lottiefiles.com/packages/lf20_4kx2q32n.json'
                 });
             {% elif applicant.status == 'Rejected' %}
                 lottie.loadAnimation({
@@ -85,10 +281,109 @@
                     renderer: 'svg',
                     loop: true,
                     autoplay: true,
-                    path: 'https://assets10.lottiefiles.com/packages/lf20_5c8qzv.json' // URL to your Lottie animation JSON file
+                    path: 'https://assets10.lottiefiles.com/packages/lf20_5c8qzv.json'
                 });
             {% endif %}
         {% endfor %}
+        
+        // Load no interviews animation if needed
+        if (document.getElementById('no-interviews-animation')) {
+            lottie.loadAnimation({
+                container: document.getElementById('no-interviews-animation'),
+                renderer: 'svg',
+                loop: true,
+                autoplay: true,
+                path: 'https://assets10.lottiefiles.com/packages/lf20_hl5n0bwb.json'
+            });
+        }
+        
+        // Calculate and update dashboard counts
+        let selectedCount = 0;
+        let pendingCount = 0;
+        
+        document.querySelectorAll('[data-status]').forEach(card => {
+            const status = card.getAttribute('data-status');
+            if (status === 'Selected') {
+                selectedCount++;
+            } else if (status === 'Pending') {
+                pendingCount++;
+            }
+            
+            // Calculate score percentage for width
+            const scoreElement = card.querySelector('.total-score');
+            if (scoreElement) {
+                const score = parseFloat(card.getAttribute('data-score') || 0);
+                const maxScore = parseFloat(scoreElement.getAttribute('data-max-score') || 10);
+                const percentage = maxScore > 0 ? (score / maxScore) * 100 : 0;
+                card.setAttribute('data-score-percentage', percentage.toFixed(2));
+            }
+        });
+        
+        // Update the dashboard counters
+        document.getElementById('selected-count').textContent = selectedCount;
+        document.getElementById('pending-count').textContent = pendingCount;
+        
+        // Search functionality
+        const searchInput = document.getElementById('search-input');
+        if (searchInput) {
+            searchInput.addEventListener('input', filterCandidates);
+        }
+        
+        // Status filter
+        const statusFilter = document.getElementById('status-filter');
+        if (statusFilter) {
+            statusFilter.addEventListener('change', filterCandidates);
+        }
+        
+        // Sort functionality
+        const sortBy = document.getElementById('sort-by');
+        if (sortBy) {
+            sortBy.addEventListener('change', sortCandidates);
+        }
+        
+        function filterCandidates() {
+            const searchTerm = searchInput.value.toLowerCase();
+            const statusValue = statusFilter.value;
+            const cards = document.querySelectorAll('#conducted-interviews .card-hover');
+            
+            cards.forEach(card => {
+                const candidateName = card.querySelector('h3').textContent.toLowerCase();
+                const candidatePosition = card.querySelector('.text-gray-600').textContent.toLowerCase();
+                const cardStatus = card.getAttribute('data-status');
+                
+                const matchesSearch = candidateName.includes(searchTerm) || candidatePosition.includes(searchTerm);
+                const matchesStatus = statusValue === 'all' || cardStatus === statusValue;
+                
+                if (matchesSearch && matchesStatus) {
+                    card.style.display = '';
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+        }
+        
+        function sortCandidates() {
+            const container = document.querySelector('#conducted-interviews .grid');
+            const cards = Array.from(container.querySelectorAll('.card-hover'));
+            const sortValue = sortBy.value;
+            
+            cards.sort((a, b) => {
+                if (sortValue === 'date-desc') {
+                    return new Date(b.getAttribute('data-date')) - new Date(a.getAttribute('data-date'));
+                } else if (sortValue === 'date-asc') {
+                    return new Date(a.getAttribute('data-date')) - new Date(b.getAttribute('data-date'));
+                } else if (sortValue === 'score-desc') {
+                    return parseFloat(b.getAttribute('data-score')) - parseFloat(a.getAttribute('data-score'));
+                } else if (sortValue === 'score-asc') {
+                    return parseFloat(a.getAttribute('data-score')) - parseFloat(b.getAttribute('data-score'));
+                }
+                return 0;
+            });
+            
+            cards.forEach(card => {
+                container.appendChild(card);
+            });
+        }
     });
 </script>
 {% endblock %}

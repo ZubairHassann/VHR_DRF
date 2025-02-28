@@ -1,35 +1,191 @@
-<!-- filepath: /home/reicho/Mega Sync Backups/Coding/VHR/VHR_DRF/video_interview_ui/frontend/templates/frontend/view_applicant_responses.html -->
-
 {% extends 'base.html' %}
 {% load response_filters %}
 
-{% block title %}Applicant Responses{% endblock %}
+{% block title %}Applicant Responses | Dashboard{% endblock %}
 
 {% block content %}
-<div class="min-h-screen flex flex-col items-center justify-center py-12 px-4 sm:px-6 lg:px-8 bg-gradient-to-r from-indigo-50 to-purple-50">
-    <div class="max-w-4xl w-full space-y-8 bg-white p-8 rounded-xl shadow-lg transform hover:shadow-2xl transition-all duration-300">
-        <div class="text-center">
-            <h2 class="text-3xl font-extrabold text-gray-900 mb-2">Applicant Responses</h2>
-            <p class="text-sm text-gray-600">Detailed responses for the applicant</p>
-        </div>
-
-        <div id="applicant-responses" class="space-y-4">
-            {% if responses %}
-                {% for response in responses %}
-                    <div class="p-4 bg-gradient-to-r from-blue-50 to-blue-100 rounded-lg shadow-md transform hover:scale-105 transition-all duration-300">
-                        <p class="text-sm text-gray-600">Question: {{ response.question_details.text }}</p>
-                        <p class="text-sm text-gray-600">Score: {{ response.score }} / 10</p>
-                    </div>
-                {% endfor %}
-                <div class="p-4 bg-gradient-to-r from-blue-50 to-blue-100 rounded-lg shadow-md transform hover:scale-105 transition-all duration-300">
-                    <p class="text-sm text-gray-600">Total Score: {{ responses|sum_scores }} / {{ responses|length|multiply:10 }}</p>
-                    <p class="text-sm text-gray-600">Total Questions Answered: {{ responses|length }}</p>
-                    <p class="text-sm text-gray-600">Total Questions in Position: {{ total_questions }}</p>
-                </div>
-            {% else %}
-                <p class="text-center text-gray-600">No responses found.</p>
-            {% endif %}
-        </div>
+<div class="min-h-screen bg-gradient-to-br from-indigo-100 via-purple-50 to-blue-100 py-12 px-4 sm:px-6 lg:px-8">
+  <div class="max-w-5xl mx-auto">
+    <!-- Header Card -->
+    <div class="bg-white rounded-2xl shadow-xl overflow-hidden mb-8 transform transition-all duration-500 hover:shadow-2xl">
+      <div class="bg-gradient-to-r from-indigo-600 to-purple-600 px-8 py-6">
+        <h1 class="text-3xl font-extrabold text-white tracking-tight">Applicant Responses</h1>
+        <p class="mt-2 text-indigo-100">Comprehensive assessment overview</p>
+      </div>
+      
+      <div class="p-6">
+        {% if responses %}
+          <!-- Summary Stats Cards -->
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+            <div class="bg-gradient-to-br from-indigo-50 to-indigo-100 rounded-xl p-5 shadow-md">
+              <p class="text-sm font-medium text-indigo-500 mb-1">Total Score</p>
+              <div class="flex items-end">
+                <span class="text-3xl font-bold text-gray-800">{{ responses|sum_scores }}</span>
+                <span class="text-gray-500 ml-1 mb-1">/ {{ total_questions|multiply:10 }}</span>
+              </div>
+              <div class="w-full bg-gray-200 rounded-full h-2 mt-3">
+                <div class="bg-indigo-600 h-2 rounded-full" style="width: {% widthratio responses|sum_scores total_questions|multiply:10 100 %}%"></div>
+              </div>
+            </div>
+            
+            <div class="bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl p-5 shadow-md">
+              <p class="text-sm font-medium text-purple-500 mb-1">Questions Answered</p>
+              <div class="flex items-end">
+                <span class="text-3xl font-bold text-gray-800">{{ responses|length }}</span>
+                <span class="text-gray-500 ml-1 mb-1">/ {{ total_questions }}</span>
+              </div>
+              <div class="w-full bg-gray-200 rounded-full h-2 mt-3">
+                <div class="bg-purple-600 h-2 rounded-full" style="width: {% widthratio responses|length total_questions 100 %}%"></div>
+              </div>
+            </div>
+            
+            <div class="bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl p-5 shadow-md">
+              <p class="text-sm font-medium text-blue-500 mb-1">Average Score</p>
+              <div class="flex items-end">
+                <span class="text-3xl font-bold text-gray-800">
+                  {% widthratio responses|sum_scores responses|length 1 as avg_score %}
+                  {{ avg_score|floatformat:1 }}
+                </span>
+                <span class="text-gray-500 ml-1 mb-1">/ 10</span>
+              </div>
+              <div class="w-full bg-gray-200 rounded-full h-2 mt-3">
+                <div class="bg-blue-600 h-2 rounded-full" style="width: {% widthratio avg_score 10 100 %}%"></div>
+              </div>
+            </div>
+          </div>
+        {% endif %}
+      </div>
     </div>
+    
+    <!-- Response List -->
+    <div id="applicant-responses" class="space-y-6">
+      {% if responses %}
+        <!-- Responses Header -->
+        <div class="flex justify-between items-center mb-4">
+          <h2 class="text-xl font-bold text-gray-800">Detailed Responses</h2>
+          <div class="flex space-x-2">
+            <button id="expand-all" class="px-3 py-1 bg-indigo-100 text-indigo-700 rounded-md text-sm font-medium hover:bg-indigo-200 transition-colors">
+              Expand All
+            </button>
+            <button id="collapse-all" class="px-3 py-1 bg-gray-100 text-gray-700 rounded-md text-sm font-medium hover:bg-gray-200 transition-colors">
+              Collapse All
+            </button>
+          </div>
+        </div>
+        
+        {% for response in responses %}
+          <div class="response-card bg-white rounded-xl shadow-md overflow-hidden transform transition-all duration-300 hover:shadow-lg border-l-4 
+            {% if response.score >= 8 %}border-green-500
+            {% elif response.score >= 5 %}border-yellow-500
+            {% else %}border-red-500{% endif %}">
+            
+            <div class="response-header flex justify-between items-center p-5 cursor-pointer">
+              <div class="flex-1">
+                <h3 class="text-lg font-semibold text-gray-800 pr-4">{{ response.question_details.text|truncatechars:80 }}</h3>
+                <p class="text-sm text-gray-500 mt-1">Question ID: {{ response.question_details.id }}</p>
+              </div>
+              <div class="flex items-center space-x-4">
+                <div class="score-badge 
+                  {% if response.score >= 8 %}bg-green-100 text-green-800
+                  {% elif response.score >= 5 %}bg-yellow-100 text-yellow-800
+                  {% else %}bg-red-100 text-red-800{% endif %}
+                  px-3 py-1 rounded-full text-sm font-medium">
+                  {{ response.score }}/10
+                </div>
+                <svg class="toggle-icon w-5 h-5 text-gray-400 transform transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                </svg>
+              </div>
+            </div>
+            
+            <div class="response-content hidden px-5 pb-5">
+              <div class="bg-gray-50 rounded-lg p-4 mb-3">
+                <p class="text-sm font-medium text-gray-500 mb-1">Question:</p>
+                <p class="text-gray-800">{{ response.question_details.text }}</p>
+              </div>
+              
+              <div class="bg-gray-50 rounded-lg p-4">
+                <p class="text-sm font-medium text-gray-500 mb-1">Response:</p>
+                <p class="text-gray-800">{{ response.text|default:"Response retrieval failed" }}</p>
+              </div>
+              
+              {% if response.feedback %}
+                <div class="mt-3 bg-indigo-50 rounded-lg p-4">
+                  <p class="text-sm font-medium text-indigo-700 mb-1">Feedback:</p>
+                  <p class="text-gray-800">{{ response.feedback }}</p>
+                </div>
+              {% endif %}
+            </div>
+          </div>
+        {% endfor %}
+        
+      {% else %}
+        <div class="bg-white rounded-xl shadow-md p-10 text-center">
+          <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+          </svg>
+          <h3 class="mt-2 text-xl font-medium text-gray-900">No responses found</h3>
+          <p class="mt-1 text-gray-500">This applicant hasn't submitted any responses yet.</p>
+        </div>
+      {% endif %}
+    </div>
+  </div>
 </div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    // Toggle response content visibility
+    const responseHeaders = document.querySelectorAll('.response-header');
+    responseHeaders.forEach(header => {
+      header.addEventListener('click', function() {
+        const content = this.nextElementSibling;
+        const icon = this.querySelector('.toggle-icon');
+        
+        content.classList.toggle('hidden');
+        icon.classList.toggle('rotate-180');
+      });
+    });
+    
+    // Expand all responses
+    document.getElementById('expand-all')?.addEventListener('click', function() {
+      document.querySelectorAll('.response-content').forEach(content => {
+        content.classList.remove('hidden');
+      });
+      document.querySelectorAll('.toggle-icon').forEach(icon => {
+        icon.classList.add('rotate-180');
+      });
+    });
+    
+    // Collapse all responses
+    document.getElementById('collapse-all')?.addEventListener('click', function() {
+      document.querySelectorAll('.response-content').forEach(content => {
+        content.classList.add('hidden');
+      });
+      document.querySelectorAll('.toggle-icon').forEach(icon => {
+        icon.classList.remove('rotate-180');
+      });
+    });
+    
+    // Add subtle animation when scrolling
+    const observerOptions = {
+      threshold: 0.1,
+      rootMargin: '0px 0px -50px 0px'
+    };
+    
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('opacity-100', 'translate-y-0');
+          entry.target.classList.remove('opacity-0', 'translate-y-4');
+          observer.unobserve(entry.target);
+        }
+      });
+    }, observerOptions);
+    
+    document.querySelectorAll('.response-card').forEach((card, index) => {
+      card.classList.add('opacity-0', 'translate-y-4', 'transition-all', 'duration-500', 'delay-' + (index % 5));
+      observer.observe(card);
+    });
+  });
+</script>
 {% endblock %}

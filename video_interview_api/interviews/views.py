@@ -37,7 +37,10 @@ import io
 import base64
 from django.db.models.functions import TruncMonth, ExtractMonth
 import pandas as pd
-
+from datetime import datetime, timedelta
+from django.db.models import Count, Q, Avg, Sum
+from django.db.models.functions import TruncDate, TruncMonth, ExtractMonth
+from django.utils import timezone
 
 @api_view(['POST'])
 def register(request):
@@ -96,11 +99,36 @@ def applicant_response_create(request):
     except Exception as e:
         return Response({'success': False, 'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     
+# filepath: /home/reicho/Mega Sync Backups/Coding/VHR/VHR_DRF/video_interview_api/interviews/views.py
+import logging
+
+logger = logging.getLogger(__name__)
+
 class PositionViewSet(viewsets.ModelViewSet):
     queryset = Position.objects.all()
     serializer_class = PositionSerializer
     permission_classes = [permissions.AllowAny]
 
+    def partial_update(self, request, *args, **kwargs):
+        try:
+            instance = self.get_object()
+            instance.name = request.data.get('name', instance.name)  # Only update the name
+            instance.is_active = request.data.get('is_active', instance.is_active)
+            instance.save()
+            return Response(PositionSerializer(instance).data)
+        except Exception as e:
+            return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+    def destroy(self, request, *args, **kwargs):
+        try:
+            instance = self.get_object()
+            logger.info(f"Deleting position {instance.id}")  # Add this line
+            self.perform_destroy(instance)
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        except Exception as e:
+            logger.error(f"Error deleting position: {str(e)}", exc_info=True)  # Add this line
+            return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+        
 class ApplicantViewSet(viewsets.ModelViewSet):
     queryset = Applicant.objects.all()
     serializer_class = ApplicantSerializer
@@ -143,15 +171,6 @@ class InterviewViewSet(viewsets.ModelViewSet):
     serializer_class = InterviewSerializer
     permission_classes = [permissions.AllowAny]
 
-@login_required
-def admin_dashboard(request):
-    context = {
-        'total_interviews': Interview.objects.count(),
-        'total_applicants': Applicant.objects.count(),
-        'total_positions': Position.objects.count(),
-        'total_questions': Question.objects.count(),
-    }
-    return render(request, 'admin/dashboard.html', context)
 
 # @login_required
 def manage_interviews(request):
@@ -233,11 +252,57 @@ def manage_applicants(request):
     return render(request, 'admin/manage_applicants.html', {'applicants': applicants})
 
 # @login_required
+@login_required
 def manage_positions(request):
-    # if not request.user.is_staff:
-    #     return redirect('login')
-    positions = Position.objects.all().order_by('name')
-    return render(request, 'admin/manage_positions.html', {'positions': positions})
+    positions = Position.objects.annotate(
+        recent_applications=Count(
+            'applicants',
+            filter=Q(applicants__created_at__gte=timezone.now() - timedelta(days=7))
+        )
+    ).all()
+
+    # Calculate statistics
+    total_applicants = Applicant.objects.count()
+    try:
+        active_positions = positions.filter(is_active=True).count()
+    except FieldError:
+        # Fallback if is_active field doesn't exist yet
+        active_positions = positions.count()
+    
+    fill_rate = (active_positions / positions.count() * 100) if positions.count() > 0 else 0
+    active_positions = positions.filter(is_active=True).count()
+    fill_rate = (active_positions / positions.count() * 100) if positions.count() > 0 else 0
+
+    # Get trending position
+    trending_position = positions.order_by('-recent_applications').first()
+
+    # Prepare chart data
+    positions_trend = Position.objects.annotate(
+        date=TruncDate('created_at')
+    ).values('date').annotate(
+        count=Count('id')
+    ).order_by('-date')[:7]
+
+    applicants_trend = Applicant.objects.annotate(
+        date=TruncDate('created_at')
+    ).values('date').annotate(
+        count=Count('id')
+    ).order_by('-date')[:7]
+
+    context = {
+        'positions': positions,
+        'total_applicants': total_applicants,
+        'active_positions': active_positions,
+        'fill_rate': round(fill_rate, 1),
+        'trending_position': trending_position.name if trending_position else 'None',
+        'trending_applications': trending_position.recent_applications if trending_position else 0,
+        'positions_trend_labels': [p['date'].strftime('%b %d') for p in positions_trend],
+        'positions_trend_data': [p['count'] for p in positions_trend],
+        'applicants_trend_labels': [a['date'].strftime('%b %d') for a in applicants_trend],
+        'applicants_trend_data': [a['count'] for a in applicants_trend],
+    }
+
+    return render(request, 'admin/manage_positions.html', context)
 
 # @login_required
 def manage_questions(request):
@@ -376,6 +441,7 @@ def view_responses(request):
 # Add this view to list unique applicants
 @login_required
 def manage_unique_applicants(request):
+    # Get base queryset with existing values and annotations
     unique_applicants = Applicant.objects.values(
         'id',
         'email', 
@@ -386,9 +452,64 @@ def manage_unique_applicants(request):
     ).annotate(
         responses_count=Count('responses')
     ).order_by('email')
-    return render(request, 'admin/manage_unique_applicants.html', {
-        'unique_applicants': unique_applicants
-    })
+
+    # Calculate statistics for stat cards
+    total_count = unique_applicants.count()
+    
+    # Status counts
+    status_counts = Applicant.objects.values('status').annotate(
+        count=Count('id')
+    ).order_by('status')
+    
+    # Initialize counts with default values
+    selected_count = 0
+    pending_count = 0
+    rejected_count = 0
+    
+    # Update counts based on actual data
+    for status in status_counts:
+        if status['status'] == 'Selected':
+            selected_count = status['count']
+        elif status['status'] == 'Pending':
+            pending_count = status['count']
+        elif status['status'] == 'Rejected':
+            rejected_count = status['count']
+
+    # Calculate rates (prevent division by zero)
+    selection_rate = round((selected_count / total_count * 100) if total_count > 0 else 0, 1)
+    processing_rate = round((pending_count / total_count * 100) if total_count > 0 else 0, 1)
+    rejection_rate = round((rejected_count / total_count * 100) if total_count > 0 else 0, 1)
+
+    # Get application rate (applications in last 30 days compared to previous 30 days)
+    today = timezone.now()
+    thirty_days_ago = today - timedelta(days=30)
+    sixty_days_ago = today - timedelta(days=60)
+    
+    recent_applications = Applicant.objects.filter(created_at__gte=thirty_days_ago).count()
+    previous_applications = Applicant.objects.filter(
+        created_at__gte=sixty_days_ago,
+        created_at__lt=thirty_days_ago
+    ).count()
+    
+    application_rate = round(
+        ((recent_applications - previous_applications) / previous_applications * 100)
+        if previous_applications > 0 else 0,
+        1
+    )
+
+    context = {
+        'unique_applicants': unique_applicants,
+        'total_count': total_count,
+        'selected_count': selected_count,
+        'pending_count': pending_count,
+        'rejected_count': rejected_count,
+        'selection_rate': selection_rate,
+        'processing_rate': processing_rate,
+        'rejection_rate': rejection_rate,
+        'application_rate': application_rate
+    }
+
+    return render(request, 'admin/manage_unique_applicants.html', context)
 
 # Add this view to show responses of a specific applicant
 @login_required

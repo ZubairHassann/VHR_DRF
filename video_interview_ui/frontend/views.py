@@ -144,23 +144,59 @@ def interviews(request):
         # Filter applicants based on the current user's email
         user_applicants = [applicant for applicant in applicants if applicant['email'] == user_email]
 
+        # Calculate counts
+        selected_count = len([a for a in user_applicants if a['status'] == 'Selected'])
+        pending_count = len([a for a in user_applicants if a['status'] == 'Pending'])
+        rejected_count = len([a for a in user_applicants if a['status'] == 'Rejected'])
+        total_count = len(user_applicants)
+
         # Add position details and response details to each applicant
         for applicant in user_applicants:
             applicant['total_questions'] = applicant.get('total_questions', 0)
-            applicant['total_score'] = sum(response['score'] if response['score'] is not None else 0 for response in responses if response['applicant'] == applicant['id'])
-            applicant['response_date'] = next((response.get('created_at') for response in responses if response['applicant'] == applicant['id']), None)
+            applicant['total_score'] = sum(response['score'] if response['score'] is not None else 0 
+                                         for response in responses 
+                                         if response['applicant'] == applicant['id'])
+            applicant['response_date'] = next((response.get('created_at') 
+                                             for response in responses 
+                                             if response['applicant'] == applicant['id']), None)
             applicant['position_id'] = applicant.get('position', None)
-            applicant['position_details'] = next((position for position in positions if position['id'] == applicant['position']), None)
+            applicant['position_details'] = next((position for position in positions 
+                                                if position['id'] == applicant['position']), None)
+
+        context = {
+            "applicants": user_applicants,
+            "user_email": user_email,
+            "user_fullname": request.user.get_full_name(),
+            "selected_count": selected_count,
+            "pending_count": pending_count,
+            "rejected_count": rejected_count,
+            "total_count": total_count
+        }
 
     except RequestException as e:
         print(f"Network error: {e}")
-        user_applicants = []
+        context = {
+            "applicants": [],
+            "user_email": user_email,
+            "user_fullname": request.user.get_full_name(),
+            "selected_count": 0,
+            "pending_count": 0,
+            "total_count": 0,
+            "error": "Network error occurred while fetching data."
+        }
     except ValueError as e:
         print(f"JSON decode error: {e}")
-        user_applicants = []
+        context = {
+            "applicants": [],
+            "user_email": user_email,
+            "user_fullname": request.user.get_full_name(),
+            "selected_count": 0,
+            "pending_count": 0,
+            "total_count": 0,
+            "error": "Error processing data from server."
+        }
 
-    return render(request, "frontend/interviews.html", {"applicants": user_applicants, "user_email": user_email, "user_fullname": request.user.get_full_name()})
-
+    return render(request, "frontend/interviews.html", context)
 
 @login_required(login_url='login')
 def view_applicant_responses(request, email, position_id):

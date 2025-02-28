@@ -10,7 +10,8 @@ class UserSerializer(serializers.ModelSerializer):
 class PositionSerializer(serializers.ModelSerializer):
     class Meta:
         model = Position
-        fields = "__all__"
+        fields = ['id', 'name', 'is_active', 'created_at']
+        read_only_fields = ['created_at']
 
 class ApplicantSerializer(serializers.ModelSerializer):
     class Meta:
