@@ -19,6 +19,7 @@ from rest_framework import generics, permissions, serializers, status, viewsets
 from rest_framework.decorators import api_view, parser_classes
 from rest_framework.parsers import FormParser, MultiPartParser
 from rest_framework.response import Response
+from django.conf import settings
 
 from .models import Applicant, ApplicantResponse, Interview, Position, Question
 from .serializers import (
@@ -41,6 +42,21 @@ from datetime import datetime, timedelta
 from django.db.models import Count, Q, Avg, Sum
 from django.db.models.functions import TruncDate, TruncMonth, ExtractMonth
 from django.utils import timezone
+import smtplib
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
+from django.urls import reverse
+from django.utils.http import urlencode
+from django.views.decorators.csrf import ensure_csrf_cookie
+from django.http import JsonResponse
+import logging
+from django.core.mail import send_mail
+from django.core.mail import send_mail, EmailMessage
+from django.template.loader import render_to_string
+
+
+logger = logging.getLogger('interviews')
+
 
 @api_view(['POST'])
 def register(request):
@@ -701,3 +717,147 @@ def admin_dashboard(request):
         return render(request, 'admin/dashboard.html', {
             'error': 'Error loading dashboard data. Please try again.'
         })
+
+
+
+logger = logging.getLogger('interviews')
+
+def generate_google_calendar_link(interview):
+    base_url = "https://calendar.google.com/calendar/render"
+    params = {
+        "action": "TEMPLATE",
+        "text": interview.title,
+        "dates": f"{interview.scheduled_date.strftime('%Y%m%dT%H%M%S')}/{(interview.scheduled_date + timedelta(hours=1)).strftime('%Y%m%dT%H%M%S')}",
+        "details": interview.description,
+        "location": "Online",
+    }
+    return f"{base_url}?{urlencode(params)}"
+
+@csrf_exempt  # Remove this in production
+def send_email(request, interview_id):
+    try:
+        logger.info(f"Attempting to send email for interview {interview_id}")
+        
+        # Get interview object
+        interview = get_object_or_404(Interview, pk=interview_id)
+        
+        # Check for email field
+        if not interview.email:
+            logger.error("No email address found for interview")
+            return JsonResponse({
+                'error': 'No email address associated with this interview'
+            }, status=400)
+
+        # Generate Google Calendar link
+        calendar_link = generate_google_calendar_link(interview)
+
+        # Prepare email content
+        subject = f"Interview Scheduled: {interview.title}"
+        message = f"""
+Dear Candidate,
+
+We are pleased to inform you that your interview has been scheduled as follows:
+
+Title: {interview.title}
+Date: {interview.scheduled_date.strftime('%B %d, %Y')}
+Time: {interview.scheduled_date.strftime('%I:%M %p')}
+Description: {interview.description or 'N/A'}
+
+You can add this event to your Google Calendar using the following link: {calendar_link}
+
+Kindly confirm your availability by replying to this email. If you are unable to attend, please notify us at your earliest convenience.
+
+Best regards,
+The Vista One Recruitment Team
+        """
+
+        logger.debug(f"Sending email to {interview.email}")
+        
+        # Send email using Django's send_mail
+        send_mail(
+            subject=subject,
+            message=message,
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            recipient_list=[interview.email],
+            fail_silently=False,
+        )
+
+        logger.info("Email sent successfully")
+        return JsonResponse({'message': 'Email sent successfully'})
+
+    except Interview.DoesNotExist:
+        logger.error(f"Interview with id {interview_id} not found")
+        return JsonResponse({
+            'error': 'Interview not found'
+        }, status=404)
+    except Exception as e:
+        logger.error(f"Error sending email: {str(e)}", exc_info=True)
+        return JsonResponse({
+            'error': f'Failed to send email: {str(e)}'
+        }, status=500)
+
+        
+# @csrf_exempt  # Remove this in production
+# def send_interview_email(request, interview_id):
+#     interview = get_object_or_404(Interview, pk=interview_id)
+
+#     if not interview.email:
+#         return JsonResponse({'error': 'Email is required for this interview.'}, status=400)
+
+#     subject = f"Interview Scheduled: {interview.title}"
+#     message = f"Dear Candidate,\n\nYour interview is scheduled for {interview.scheduled_date}."
+
+#     try:
+#         send_mail(
+#             subject,
+#             message,
+#             settings.DEFAULT_FROM_EMAIL,
+#             [interview.email],
+#             fail_silently=False,
+#         )
+#         return JsonResponse({'message': 'Email sent successfully.'})
+#     except Exception as e:
+#         return JsonResponse({'error': str(e)}, status=500)
+
+
+
+@csrf_exempt
+def send_applicant_email(request):
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            email = data.get('email')
+            status = data.get('status')
+            position_id = data.get('position_id')
+
+            if not email or not status or not position_id:
+                return JsonResponse({'error': 'Email, status, and position_id are required.'}, status=400)
+
+            try:
+                applicant = Applicant.objects.get(email=email, position_id=position_id)
+            except Applicant.DoesNotExist:
+                return JsonResponse({'error': 'Applicant not found for the given email and position.'}, status=404)
+
+            if status == 'Selected':
+                subject = 'Congratulations on Your Selection'
+                html_content = render_to_string('emails/selected_email.html', {
+                    'applicant': applicant
+                })
+            elif status == 'Rejected':
+                subject = 'Application Status Update'
+                html_content = render_to_string('emails/rejected_email.html', {
+                    'applicant': applicant
+                })
+            else:
+                return JsonResponse({'error': 'Invalid status.'}, status=400)
+
+            msg = EmailMessage(subject, html_content, settings.DEFAULT_FROM_EMAIL, [email])
+            msg.content_subtype = "html"  # Set the content type to HTML
+            msg.send()
+
+            return JsonResponse({'success': 'Email sent successfully.'})
+
+        except Exception as e:
+            return JsonResponse({'error': str(e)}, status=500)
+
+    return JsonResponse({'error': 'Invalid request method.'}, status=400)

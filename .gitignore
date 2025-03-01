@@ -3,3 +3,8 @@ response_*
 _pycache_*
 _pycache_/
 **/_pycache_/
+
+
+# Logging
+logs/
+*.log

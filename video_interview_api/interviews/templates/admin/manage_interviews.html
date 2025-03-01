@@ -1,6 +1,8 @@
 {% extends "admin/base_admin.html" %}
 {% block title %}Manage Interviews{% endblock %}
+{% csrf_token %}
 {% block page_title %}Manage Interviews{% endblock %}
+
 
 {% block admin_content %}
 <div class="bg-white rounded-xl shadow-md overflow-hidden">
@@ -23,6 +25,10 @@
                     <label class="block text-sm font-medium text-gray-700 mb-1">Description</label>
                     <textarea name="description" rows="3"
                               class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"></textarea>
+                </div>
+                <div class="mb-4">
+                    <label for="email" class="block text-gray-700 text-sm font-bold mb-2">Candidate Email:</label>
+                    <input type="email" name="email" id="email" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" placeholder="Enter email address">
                 </div>
             </div>
             <button type="submit" class="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition">
@@ -62,14 +68,16 @@
                             {{ interview.status|title }}
                         </span>
                     </td>
+                    
                     <td class="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
-                        <button onclick="editInterview({{ interview.id }})" 
-                                class="text-blue-600 hover:text-blue-900">
+                        <button onclick="editInterview({{ interview.id }})" class="text-blue-600 hover:text-blue-900">
                             <i class="fas fa-edit"></i> Edit
                         </button>
-                        <button onclick="deleteInterview({{ interview.id }})"
-                                class="text-red-600 hover:text-red-900">
+                        <button onclick="deleteInterview({{ interview.id }})" class="text-red-600 hover:text-red-900">
                             <i class="fas fa-trash"></i> Delete
+                        </button>
+                        <button onclick="sendEmails({{ interview.id }})" class="text-green-600 hover:text-green-900">
+                            <i class="fas fa-envelope"></i> Send Email
                         </button>
                     </td>
                 </tr>
@@ -118,6 +126,11 @@
                             <option value="rejected">Rejected</option>
                         </select>
                     </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                        <input type="email" id="edit_email" name="email"
+                               class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                    </div>
                 </div>
                 <div class="mt-4 flex justify-end space-x-2">
                     <button type="button" onclick="closeEditModal()" 
@@ -143,6 +156,7 @@
                 document.getElementById('edit_scheduled_date').value = data.scheduled_date;
                 document.getElementById('edit_description').value = data.description || '';
                 document.getElementById('edit_status').value = data.status;
+                document.getElementById('edit_email').value = data.email || '';
                 document.getElementById('editModal').classList.remove('hidden');
             });
     }
@@ -258,5 +272,49 @@ function updateStatus(id, status) {
     }
 }
 
+function sendEmails(interviewId) {
+    const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+    
+    fetch(`/interviews/${interviewId}/send_email/`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': csrfToken,
+        },
+        credentials: 'include'
+    })
+    .then(async response => {
+        const data = await response.json();
+        if (!response.ok) {
+            throw new Error(data.error || 'Failed to send email');
+        }
+        showToast('Email sent successfully', 'success');
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showToast(error.message || 'Failed to send email', 'error');
+    });
+}
+{% comment %} function sendEmail(interviewId) {
+    fetch(`/interviews/${interviewId}/send_email/`, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': '{{ csrf_token }}',
+            'Content-Type': 'application/json'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.error) {
+            alert('Error: ' + data.error);
+        } else {
+            alert('Success: ' + data.message);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('An error occurred.');
+    });
+} {% endcomment %}
 </script>
 {% endblock %}

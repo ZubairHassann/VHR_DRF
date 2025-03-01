@@ -32,7 +32,9 @@ from interviews.views import (
     admin_login,
     admin_logout,
     update_response_status,
-    
+    send_email,
+    # send_interview_email,
+    send_applicant_email
 )
 
 # API Router Setup
@@ -76,12 +78,12 @@ urlpatterns = [
     path('responses/<int:response_id>/status/', update_response_status, name='update_response_status'),
     path('view_responses/', view_responses, name='view_responses'),
 
-]
-
-urlpatterns += [
     path('unique_applicants/', manage_unique_applicants, name='manage_unique_applicants'),
     path('unique_applicants/<str:email>/<int:position_id>/', view_applicant_responses, name='view_applicant_responses'),
     path('admin/login/', admin_login, name='admin_login'),
     path('admin/logout/', admin_logout, name='admin_logout'),
     path('responses/<int:response_id>/score/', update_response_status, name='update_response_score'),
+    path('interviews/<int:interview_id>/send_email/', send_email, name='send_interview_email'),
+    # path('interviews/<int:interview_id>/send_email/', send_interview_email, name='send_interview_email'),
+    path('api/send_applicant_email/', send_applicant_email, name='send_applicant_email'),
 ]
