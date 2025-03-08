@@ -1,0 +1,97 @@
+{% extends "base.html" %}
+{% block title %}Available Jobs{% endblock %}
+{% block content %}
+<div class="min-h-screen bg-gradient flex flex-col items-center justify-start py-12 px-4 sm:px-6 lg:px-8">
+    <div class="max-w-6xl w-full space-y-8 glass-effect p-8 rounded-xl shadow-xl">
+        <div class="text-center">
+            <h1 class="text-4xl font-extrabold text-gray mb-2 tracking-tight">
+                <i class="fas fa-briefcase mr-2"></i>Available Jobs
+            </h1>
+        </div>
+        <div id="job-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <!-- Jobs will be dynamically inserted here -->
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        fetch('http://127.0.0.1:8000/api/positions/')
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Failed to fetch positions');
+                }
+                return response.json();
+            })
+            .then(data => {
+                const jobList = document.getElementById('job-list');
+                if (Array.isArray(data)) {
+                    data.forEach(position => {
+                        if (position.is_active) {
+                            const jobCard = document.createElement('div');
+                            jobCard.className = 'bg-white rounded-xl shadow-lg overflow-hidden card-hover';
+                            jobCard.innerHTML = `
+                                <div class="p-5">
+                                    <h3 class="text-xl font-bold text-gray-800 mb-1">${position.name}</h3>
+                                    <p class="text-sm text-gray-600">${position.description || 'No description available'}</p>
+                                    <button onclick="applyJob(${position.id})" class="mt-4 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition">
+                                        Apply Now
+                                    </button>
+                                </div>
+                            `;
+                            jobList.appendChild(jobCard);
+                        }
+                    });
+                } else {
+                    console.error('Invalid data format received from API');
+                }
+            })
+            .catch(error => {
+                console.error('Error fetching positions:', error);
+                const jobList = document.getElementById('job-list');
+                jobList.innerHTML = `
+                    <div class="col-span-full text-center text-red-600">
+                        <p>Failed to load positions. Please try again later.</p>
+                    </div>
+                `;
+            });
+    });
+
+    
+function applyJob(positionId) {
+    fetch(`http://127.0.0.1:8000/api/positions/${positionId}/apply/`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCookie('csrftoken')
+        },
+        credentials: 'same-origin'
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.error) {
+            alert(data.error);
+        } else {
+            alert('You have successfully applied for the job');
+        }
+    });
+}
+
+// Function to get CSRF token from cookies
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            // Does this cookie string begin with the name we want?
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+</script>
+{% endblock %}

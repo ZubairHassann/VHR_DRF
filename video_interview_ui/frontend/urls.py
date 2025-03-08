@@ -10,4 +10,6 @@ urlpatterns = [
     path('dashboard/', views.dashboard, name='dashboard'),
     path('interviews/', views.interviews, name='interviews'),
     path('view_applicant_responses/<str:email>/<int:position_id>/', views.view_applicant_responses, name='view_applicant_responses'),
+    path('jobs/', views.available_jobs, name='available_jobs'),
+    path('jobs/apply/<int:position_id>/', views.apply_job, name='apply_job'),
 ]

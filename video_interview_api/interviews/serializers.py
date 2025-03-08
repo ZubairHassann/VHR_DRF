@@ -10,7 +10,10 @@ class UserSerializer(serializers.ModelSerializer):
 class PositionSerializer(serializers.ModelSerializer):
     class Meta:
         model = Position
-        fields = ['id', 'name', 'is_active', 'created_at']
+        fields = ['id', 'name', 'description', 'is_active']
+        extra_kwargs = {
+            'description': {'required': False, 'allow_blank': True}
+        }
         read_only_fields = ['created_at']
 
 class ApplicantSerializer(serializers.ModelSerializer):

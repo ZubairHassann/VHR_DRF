@@ -34,7 +34,10 @@ from interviews.views import (
     update_response_status,
     send_email,
     # send_interview_email,
-    send_applicant_email
+    send_applicant_email,
+    add_job,
+    PositionListCreateAPIView,
+    ApplyJobAPIView
 )
 
 # API Router Setup
@@ -86,4 +89,9 @@ urlpatterns = [
     path('interviews/<int:interview_id>/send_email/', send_email, name='send_interview_email'),
     # path('interviews/<int:interview_id>/send_email/', send_interview_email, name='send_interview_email'),
     path('api/send_applicant_email/', send_applicant_email, name='send_applicant_email'),
+
+    #Jobs
+    path('api/positions/', PositionListCreateAPIView.as_view(), name='position_list_create'),
+    path('api/positions/<int:position_id>/apply/', ApplyJobAPIView.as_view(), name='apply_job'),
+    path('add-job/', add_job, name='add_job'),
 ]

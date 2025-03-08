@@ -7,6 +7,8 @@ from django.contrib.auth.models import User
 from .decorators import login_required_custom
 from django.contrib.auth.decorators import login_required
 from requests.exceptions import RequestException
+from django.contrib import messages
+from django.views.decorators.http import require_http_methods
 
 BACKEND_API_URL = "http://127.0.0.1:8000/api"
 
@@ -152,7 +154,7 @@ def video_interview(request, applicant_id=None):
         "questions": questions,
     })
 
-
+@login_required
 def interviews(request):
     user_email = request.user.email
     try:
@@ -306,3 +308,25 @@ def interview_from_link(request):
     except ValueError as e:
         print(f"JSON decode error: {e}")
         return redirect(reverse("index"))
+
+
+def available_jobs(request):
+    response = requests.get(f"{BACKEND_API_URL}/positions/")
+    if response.status_code == 200:
+        positions = response.json()
+    else:
+        positions = []
+    return render(request, 'frontend/available_jobs.html', {'positions': positions})
+
+@require_http_methods(["POST"])
+@login_required
+def apply_job(request, position_id):
+    response = requests.post(
+        f"{BACKEND_API_URL}/positions/{position_id}/apply/",
+        headers={'Authorization': f'Token {request.user.auth_token.key}'}
+    )
+    if response.status_code == 201:
+        messages.success(request, 'You have successfully applied for the job')
+    else:
+        messages.error(request, 'Failed to apply for the job')
+    return redirect('available_jobs')           

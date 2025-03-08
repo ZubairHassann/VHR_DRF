@@ -53,7 +53,7 @@ import logging
 from django.core.mail import send_mail
 from django.core.mail import send_mail, EmailMessage
 from django.template.loader import render_to_string
-
+from rest_framework.views import APIView
 
 logger = logging.getLogger('interviews')
 
@@ -370,12 +370,16 @@ def manage_questions(request):
 
 
 # @login_required
+@require_http_methods(["POST"])
 def add_position(request):
-    if request.method == 'POST':
-        name = request.POST.get('name')
-        if name:
-            Position.objects.create(name=name)
-            return redirect('manage_positions')
+    name = request.POST.get('name')
+    description = request.POST.get('description')
+    is_active = request.POST.get('is_active') == 'on'
+    if name:
+        Position.objects.create(name=name, description=description, is_active=is_active)
+        messages.success(request, 'Position added successfully')
+    else:
+        messages.error(request, 'Please provide a position name')
     return redirect('manage_positions')
 
 
@@ -904,3 +908,39 @@ def send_applicant_email(request):
             return JsonResponse({'error': str(e)}, status=500)
 
     return JsonResponse({'error': 'Invalid request method.'}, status=400)
+
+
+
+@require_http_methods(["GET", "POST"])
+def add_job(request):
+    if request.method == 'POST':
+        name = request.POST.get('name')
+        description = request.POST.get('description')
+        is_active = request.POST.get('is_active') == 'on'
+        if name:
+            Position.objects.create(name=name, description=description, is_active=is_active)
+            messages.success(request, 'Job posted successfully')
+        else:
+            messages.error(request, 'Please provide a job name')
+        return redirect('add_job')
+    return render(request, 'admin/add_job.html')
+
+
+class PositionListCreateAPIView(generics.ListCreateAPIView):
+    queryset = Position.objects.all()
+    serializer_class = PositionSerializer
+    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+
+
+
+class ApplyJobAPIView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request, position_id):
+        position = Position.objects.filter(id=position_id, is_active=True).first()
+        if not position:
+            return Response({'error': 'Position not found or closed'}, status=404)
+        
+        applicant = Applicant.objects.create(user=request.user, position=position, status='Pending')
+        serializer = ApplicantSerializer(applicant)
+        return Response(serializer.data, status=201)
