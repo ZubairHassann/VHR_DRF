@@ -202,15 +202,20 @@ def add_interview(request):
         title = request.POST.get('title')
         scheduled_date = request.POST.get('scheduled_date')
         description = request.POST.get('description', '')
+        candidate_name = request.POST.get('candidate_name')
+        position = request.POST.get('position')
+        email = request.POST.get('email')
 
-        if title and scheduled_date:
+        if title and scheduled_date and candidate_name and position:
             Interview.objects.create(
                 title=title,
                 scheduled_date=scheduled_date,
                 description=description,
+                candidate_name=candidate_name,
+                position=position,
+                email=email,
                 status='pending'
             )
-            # Return both status and message
             return JsonResponse({
                 'status': 'success',
                 'message': 'Interview scheduled successfully'
@@ -224,8 +229,43 @@ def add_interview(request):
             'status': 'error',
             'message': str(e)
         }, status=400)
-    
+
+
 # @login_required
+@require_http_methods(["POST"])
+def add_interview(request):
+    try:
+        title = request.POST.get('title')
+        scheduled_date = request.POST.get('scheduled_date')
+        description = request.POST.get('description', '')
+        candidate_name = request.POST.get('candidate_name')
+        position = request.POST.get('position')
+        email = request.POST.get('email')
+
+        if title and scheduled_date and candidate_name and position:
+            Interview.objects.create(
+                title=title,
+                scheduled_date=scheduled_date,
+                description=description,
+                candidate_name=candidate_name,
+                position=position,
+                email=email,
+                status='pending'
+            )
+            return JsonResponse({
+                'status': 'success',
+                'message': 'Interview scheduled successfully'
+            })
+        return JsonResponse({
+            'status': 'error',
+            'message': 'Missing required fields'
+        }, status=400)
+    except Exception as e:
+        return JsonResponse({
+            'status': 'error',
+            'message': str(e)
+        }, status=400)
+
 @require_http_methods(["POST"])
 def edit_interview(request, interview_id):
     try:
@@ -233,6 +273,9 @@ def edit_interview(request, interview_id):
         interview.title = request.POST.get('title', interview.title)
         interview.scheduled_date = request.POST.get('scheduled_date', interview.scheduled_date)
         interview.description = request.POST.get('description', interview.description)
+        interview.candidate_name = request.POST.get('candidate_name', interview.candidate_name)
+        interview.position = request.POST.get('position', interview.position)
+        interview.email = request.POST.get('email', interview.email)
         interview.save()
         return JsonResponse({'message': 'Interview updated successfully'})
     except Exception as e:

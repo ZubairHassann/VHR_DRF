@@ -1,5 +1,5 @@
-from django.urls import reverse
 import requests
+from django.urls import reverse
 from django.shortcuts import render, redirect
 from django.conf import settings
 from django.contrib.auth import authenticate, login, logout
@@ -56,7 +56,6 @@ def dashboard(request):
     return render(request, "frontend/dashboard.html", {"applicants": applicants})
 
 
-@login_required(login_url='login')
 def index(request):
     error_message = None  # Initialize error message
 
@@ -100,15 +99,47 @@ def index(request):
     positions = requests.get(f"{BACKEND_API_URL}/positions/").json()
     return render(request, "frontend/index.html", {"positions": positions, "error": error_message}) # Pass error (can be None)
 
-def video_interview(request, applicant_id):
-    # Fetch applicant details from backend
-    applicant_response = requests.get(f"{BACKEND_API_URL}/applicants/{applicant_id}/")
-    
-    if applicant_response.status_code != 200:
-        return redirect(reverse("index"))  # Redirect if applicant not found
+def video_interview(request, applicant_id=None):
+    email = request.GET.get('email')
+    position = request.GET.get('position')
+    name = request.GET.get('name')
 
-    applicant = applicant_response.json()
-    position_id = applicant.get("position")
+    if applicant_id:
+        # Fetch applicant details from backend
+        applicant_response = requests.get(f"{BACKEND_API_URL}/applicants/{applicant_id}/")
+        
+        if applicant_response.status_code != 200:
+            return redirect(reverse("index"))  # Redirect if applicant not found
+
+        applicant = applicant_response.json()
+        position_id = applicant.get("position")
+    else:
+        if not email or not position or not name:
+            return redirect(reverse("index"))
+
+        # Check if applicant already exists (for the SAME email and position)
+        existing_applicants_response = requests.get(f"{BACKEND_API_URL}/applicants/?email={email}&position={position}")
+        existing_applicants_response.raise_for_status()
+        existing_applicants = existing_applicants_response.json()
+
+        if existing_applicants:
+            applicant_id = existing_applicants[0]['id']
+        else:
+            # Create a new applicant if they don't exist
+            response = requests.post(
+                f"{BACKEND_API_URL}/applicants/",
+                json={"fullname": name, "email": email, "position": position},
+            )
+            response.raise_for_status()
+            applicant_data = response.json()
+            applicant_id = applicant_data.get("id")
+
+        applicant = {
+            "fullname": name,
+            "email": email,
+            "position": position,
+        }
+        position_id = position
 
     # Fetch questions based on position
     questions_response = requests.get(f"{BACKEND_API_URL}/questions/?position={position_id}")
@@ -122,7 +153,6 @@ def video_interview(request, applicant_id):
     })
 
 
-@login_required(login_url='login')
 def interviews(request):
     user_email = request.user.email
     try:
@@ -198,7 +228,6 @@ def interviews(request):
 
     return render(request, "frontend/interviews.html", context)
 
-@login_required(login_url='login')
 def view_applicant_responses(request, email, position_id):
     try:
         # Fetch applicant responses
@@ -242,3 +271,38 @@ def view_applicant_responses(request, email, position_id):
         "total_score": total_score,
         "total_questions": total_questions
     })
+
+def interview_from_link(request):
+    email = request.GET.get('email')
+    position = request.GET.get('position')
+    name = request.GET.get('name')
+
+    if not email or not position or not name:
+        return redirect(reverse("index"))
+
+    try:
+        # Check if applicant already exists (for the SAME email and position)
+        existing_applicants_response = requests.get(f"{BACKEND_API_URL}/applicants/?email={email}&position={position}")
+        existing_applicants_response.raise_for_status()
+        existing_applicants = existing_applicants_response.json()
+
+        if existing_applicants:
+            applicant_id = existing_applicants[0]['id']
+        else:
+            # Create a new applicant if they don't exist
+            response = requests.post(
+                f"{BACKEND_API_URL}/applicants/",
+                json={"fullname": name, "email": email, "position": position},
+            )
+            response.raise_for_status()
+            applicant_data = response.json()
+            applicant_id = applicant_data.get("id")
+
+        return redirect(reverse("video_interview", kwargs={"applicant_id": applicant_id}))
+
+    except RequestException as e:
+        print(f"Network error: {e}")
+        return redirect(reverse("index"))
+    except ValueError as e:
+        print(f"JSON decode error: {e}")
+        return redirect(reverse("index"))

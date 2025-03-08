@@ -8,7 +8,7 @@
       <div class="flex items-center justify-between">
         <div>
           <h1 class="text-2xl font-bold text-gray-900">Video Interview</h1>
-          <p class="text-sm text-gray-600">Welcome, {{ applicant_name }}</p>
+          <p class="text-sm text-gray-600">Welcome, <span id="applicant-name"></span></p>
         </div>
         <div class="bg-blue-50 px-3 py-1.5 rounded-lg">
           <p class="text-xs text-blue-800 font-medium">Interview in Progress</p>
@@ -25,7 +25,6 @@
           onclick="skipToNext(currentQuestionIndex - 1)" 
           id="prev-btn"
           class="px-4 py-2 text-sm bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed"
-          {% if forloop.first %}disabled{% endif %}
         >
           <i class="fas fa-chevron-left mr-2"></i> Previous Question
         </button>
@@ -194,6 +193,16 @@
 
   // Initialize page
   document.addEventListener('DOMContentLoaded', () => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const email = urlParams.get('email');
+    const position = urlParams.get('position');
+    const name = urlParams.get('name');
+
+    if (email && position && name) {
+      document.getElementById('applicant-name').textContent = name;
+      // You can use these parameters to fetch additional data if needed
+    }
+
     updateProgress();
   });
 

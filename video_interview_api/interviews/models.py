@@ -60,6 +60,8 @@ class Interview(models.Model):
     status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='pending')
     created_at = models.DateTimeField(auto_now_add=True)
     email = models.EmailField(max_length=254, blank=True, null=True)
+    candidate_name = models.CharField(max_length=255, blank=True, null=True)
+    position = models.CharField(max_length=255, blank=True, null=True)
     
     def __str__(self):
         return self.title
