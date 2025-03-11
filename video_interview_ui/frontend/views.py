@@ -10,7 +10,7 @@ from requests.exceptions import RequestException
 from django.contrib import messages
 from django.views.decorators.http import require_http_methods
 
-BACKEND_API_URL = "http://127.0.0.1:8000/api"
+BACKEND_API_URL = "http://vhr-backend-bff6bd-546829-65-108-245-140.traefik.me/api"
 
 def register(request):
     if request.method == "POST":
