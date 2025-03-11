@@ -1,26 +1,38 @@
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timedelta
 import json
-from django.db.models import Count, Q, Avg
-from django.db.models.functions import ExtractMonth
-from django.utils import timezone
-from datetime import timedelta
+import logging
+import smtplib
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
+from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
+from django.core.mail import send_mail, EmailMessage
+from django.db import models
+from django.db.models import Count, Q, Avg, Sum
+from django.db.models.functions import TruncDate, TruncMonth, ExtractMonth
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
+from django.template.loader import render_to_string
+from django.urls import reverse
+from django.utils import timezone
 from django.utils.decorators import method_decorator
+from django.utils.http import urlencode
 from django.views import View
-from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.csrf import csrf_exempt, ensure_csrf_cookie
 from django.views.decorators.http import require_http_methods
-
-from rest_framework import generics, permissions, serializers, status, viewsets
+from rest_framework import generics, permissions, status, viewsets
 from rest_framework.decorators import api_view, parser_classes
 from rest_framework.parsers import FormParser, MultiPartParser
 from rest_framework.response import Response
-from django.conf import settings
-
+from rest_framework.views import APIView
+import matplotlib.pyplot as plt
+import seaborn as sns
+import io
+import base64
+import pandas as pd
 from .models import Applicant, ApplicantResponse, Interview, Position, Question
 from .serializers import (
     ApplicantResponseSerializer,
@@ -29,31 +41,7 @@ from .serializers import (
     PositionSerializer,
     QuestionSerializer,
 )
-from django.db.models import Count
-from django.db import models 
-from django.db.models import Count, Q 
-import matplotlib.pyplot as plt
-import seaborn as sns
-import io
-import base64
-from django.db.models.functions import TruncMonth, ExtractMonth
-import pandas as pd
-from datetime import datetime, timedelta
-from django.db.models import Count, Q, Avg, Sum
-from django.db.models.functions import TruncDate, TruncMonth, ExtractMonth
-from django.utils import timezone
-import smtplib
-from email.mime.text import MIMEText
-from email.mime.multipart import MIMEMultipart
-from django.urls import reverse
-from django.utils.http import urlencode
-from django.views.decorators.csrf import ensure_csrf_cookie
-from django.http import JsonResponse
-import logging
-from django.core.mail import send_mail
-from django.core.mail import send_mail, EmailMessage
-from django.template.loader import render_to_string
-from rest_framework.views import APIView
+
 
 logger = logging.getLogger('interviews')
 
@@ -115,7 +103,6 @@ def applicant_response_create(request):
     except Exception as e:
         return Response({'success': False, 'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     
-# filepath: /home/reicho/Mega Sync Backups/Coding/VHR/VHR_DRF/video_interview_api/interviews/views.py
 import logging
 
 logger = logging.getLogger(__name__)
@@ -844,28 +831,6 @@ The Vista One Recruitment Team
         }, status=500)
 
         
-# @csrf_exempt  # Remove this in production
-# def send_interview_email(request, interview_id):
-#     interview = get_object_or_404(Interview, pk=interview_id)
-
-#     if not interview.email:
-#         return JsonResponse({'error': 'Email is required for this interview.'}, status=400)
-
-#     subject = f"Interview Scheduled: {interview.title}"
-#     message = f"Dear Candidate,\n\nYour interview is scheduled for {interview.scheduled_date}."
-
-#     try:
-#         send_mail(
-#             subject,
-#             message,
-#             settings.DEFAULT_FROM_EMAIL,
-#             [interview.email],
-#             fail_silently=False,
-#         )
-#         return JsonResponse({'message': 'Email sent successfully.'})
-#     except Exception as e:
-#         return JsonResponse({'error': str(e)}, status=500)
-
 
 
 @csrf_exempt

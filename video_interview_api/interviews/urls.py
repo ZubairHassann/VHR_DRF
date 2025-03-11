@@ -33,7 +33,6 @@ from interviews.views import (
     admin_logout,
     update_response_status,
     send_email,
-    # send_interview_email,
     send_applicant_email,
     add_job,
     PositionListCreateAPIView,
