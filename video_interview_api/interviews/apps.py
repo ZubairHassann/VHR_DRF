@@ -6,4 +6,4 @@ class InterviewsConfig(AppConfig):
 
     def ready(self):
         # Import the template tags when the app is ready
-        from video_interview_api.interviews.templatetags import responses_filters
+        from video_interview_api.interviews.templatetags import response_filters
