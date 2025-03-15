@@ -129,12 +129,13 @@ USE_TZ = True
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-# CORS_ALLOWED_ORIGINS = [
-#     "http://127.0.0.1:8001",  # ✅ Frontend URL
-# ]
+CORS_ALLOWED_ORIGINS = [
+    "http://127.0.0.1:8001",  # ✅ Frontend URL
+]
 
 CORS_ALLOW_ALL_ORIGINS = True
 
+BACKEND_API_URL = "http://127.0.0.1:8000/api"
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')

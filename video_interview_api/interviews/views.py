@@ -115,7 +115,8 @@ class PositionViewSet(viewsets.ModelViewSet):
     def partial_update(self, request, *args, **kwargs):
         try:
             instance = self.get_object()
-            instance.name = request.data.get('name', instance.name)  # Only update the name
+            instance.name = request.data.get('name', instance.name)
+            instance.description = request.data.get('description', instance.description) 
             instance.is_active = request.data.get('is_active', instance.is_active)
             instance.save()
             return Response(PositionSerializer(instance).data)
@@ -149,6 +150,7 @@ class ApplicantViewSet(viewsets.ModelViewSet):
         return queryset
 
 class QuestionViewSet(viewsets.ModelViewSet):
+    queryset = Question.objects.all()
     serializer_class = QuestionSerializer
     permission_classes = [permissions.AllowAny]
 
@@ -162,7 +164,28 @@ class QuestionViewSet(viewsets.ModelViewSet):
             except ValueError:
                 return Question.objects.none()
         return queryset
+    
+        def partial_update(self, request, *args, **kwargs):
+            try:
+                instance = self.get_object()
+                # Get the data from request
+                text = request.data.get('text', instance.text)
+                time_limit = request.data.get('time_limit', instance.time_limit)
+                positions = request.data.get('positions', [])
 
+                # Update the instance
+                instance.text = text
+                instance.time_limit = time_limit
+                instance.save()
+
+                # Update positions
+                if positions:
+                    instance.positions.set(positions)
+
+                return Response(self.serializer_class(instance).data)
+            except Exception as e:
+                return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+            
 class ApplicantResponseViewSet(viewsets.ModelViewSet):
     queryset = ApplicantResponse.objects.all()
     serializer_class = ApplicantResponseSerializer

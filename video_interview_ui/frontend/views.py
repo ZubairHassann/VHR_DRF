@@ -11,7 +11,7 @@ from django.contrib import messages
 from django.views.decorators.http import require_http_methods
 from config import settings
 
-BACKEND_API_URL = settings.BACKEND_API_URL
+BACKEND_API_URL = "http://127.0.0.1:8000/api"
 
 def register(request):
     if request.method == "POST":
@@ -339,4 +339,4 @@ def apply_job(request, position_id):
         messages.success(request, 'You have successfully applied for the job')
     else:
         messages.error(request, 'Failed to apply for the job')
-    return redirect('available_jobs')           
+    return redirect('available_jobs')
