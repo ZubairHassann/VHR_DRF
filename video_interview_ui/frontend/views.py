@@ -9,8 +9,9 @@ from django.contrib.auth.decorators import login_required
 from requests.exceptions import RequestException
 from django.contrib import messages
 from django.views.decorators.http import require_http_methods
+from config import settings
 
-BACKEND_API_URL = "http://vhr-backend-bff6bd-546829-65-108-245-140.traefik.me/api"
+BACKEND_API_URL = settings.BACKEND_API_URL
 
 def register(request):
     if request.method == "POST":
@@ -58,6 +59,7 @@ def dashboard(request):
     return render(request, "frontend/dashboard.html", {"applicants": applicants})
 
 
+@login_required
 def index(request):
     error_message = None  # Initialize error message
 
@@ -101,6 +103,8 @@ def index(request):
     positions = requests.get(f"{BACKEND_API_URL}/positions/").json()
     return render(request, "frontend/index.html", {"positions": positions, "error": error_message}) # Pass error (can be None)
 
+
+@login_required
 def video_interview(request, applicant_id=None):
     email = request.GET.get('email')
     position = request.GET.get('position')
@@ -230,6 +234,9 @@ def interviews(request):
 
     return render(request, "frontend/interviews.html", context)
 
+
+
+@login_required
 def view_applicant_responses(request, email, position_id):
     try:
         # Fetch applicant responses
@@ -274,6 +281,8 @@ def view_applicant_responses(request, email, position_id):
         "total_questions": total_questions
     })
 
+
+@login_required
 def interview_from_link(request):
     email = request.GET.get('email')
     position = request.GET.get('position')
@@ -310,6 +319,7 @@ def interview_from_link(request):
         return redirect(reverse("index"))
 
 
+@login_required
 def available_jobs(request):
     response = requests.get(f"{BACKEND_API_URL}/positions/")
     if response.status_code == 200:

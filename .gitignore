@@ -1,10 +1,15 @@
 /.venv
-response_*
 _pycache_*
 _pycache_/
 **/_pycache_/
-
+videos/
 .env
 # Logging
 logs/
 *.log
+.gitignore
+video_interview_ui/frontend/__pycache__/urls.cpython-312.pyc
+video_interview_ui/frontend/__pycache__/views.cpython-312.pyc
+video_interview_api/interviews/__pycache__/apps.cpython-312.pyc
+video_interview_api/interviews/__pycache__/urls.cpython-312.pyc
+video_interview_api/interviews/__pycache__/views.cpython-312.pyc
