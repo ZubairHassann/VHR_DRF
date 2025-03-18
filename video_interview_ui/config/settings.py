@@ -114,7 +114,7 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 
 CSRF_TRUSTED_ORIGINS = [
+    "http://vhr-backend-bff6bd-546829-65-108-245-140.traefik.me",
     "http://127.0.0.1:8000",  
     "http://localhost:8000",
-    "http://127.0.0.1:8000",
 ]

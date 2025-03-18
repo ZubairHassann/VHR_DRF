@@ -27,7 +27,13 @@ SECRET_KEY = 'django-insecure-f(sm*&=!6p8qvcoz0)h5z2b#-z*6%&#&hulby7sy__=g8s@k4f
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = [
+    "vhr.thevista365.com",  # frontend domain
+    "vhr-backend-bff6bd-546829-65-108-245-140.traefik.me",  # Backend domain
+    "127.0.0.1",  # Local development
+    "localhost",
+]
+
 
 
 # Application definition
@@ -130,12 +136,15 @@ USE_TZ = True
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 CORS_ALLOWED_ORIGINS = [
-    "http://127.0.0.1:8001",  # ✅ Frontend URL
+    "http://127.0.0.1:8001",  #Local Frontend URL
+    "https://vhr.thevista365.com" #Deployed Frontend URL
+
 ]
 
 CORS_ALLOW_ALL_ORIGINS = True
 
-BACKEND_API_URL = "http://127.0.0.1:8000/api"
+BACKEND_API_URL = "http://vhr-backend-bff6bd-546829-65-108-245-140.traefik.me"
+# BACKEND_API_URL = "http://127.0.0.1:8000"
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')

@@ -40,7 +40,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 const csrfToken = await getCSRFToken();
 
                 try {
-                    const response = await fetch("http://127.0.0.1:8000/api/applicant-responses/", {
+                    const response = await fetch("http://vhr-backend-bff6bd-546829-65-108-245-140.traefik.me/api/applicant-responses/", {
                         method: "POST",
                         headers: {
                             "X-CSRFToken": csrfToken

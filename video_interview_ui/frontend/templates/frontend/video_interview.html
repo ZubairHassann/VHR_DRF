@@ -304,7 +304,7 @@
 
     const csrfToken = document.querySelector("[name=csrfmiddlewaretoken]").value;
 
-    fetch("http://127.0.0.1:8000/api/applicant-responses/", {
+    fetch("http://vhr-backend-bff6bd-546829-65-108-245-140.traefik.me/api/applicant-responses/", {
       method: "POST",
       headers: {
         "X-CSRFToken": csrfToken

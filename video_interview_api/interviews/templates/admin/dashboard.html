@@ -317,7 +317,7 @@ Admin Dashboard
       // Chart View Toggle
       document.getElementById('chartView').addEventListener('change', function(e) {
           const view = e.target.value;
-          fetch(`/api/applicant-distribution/?view=${view}`)
+          fetch(`http://vhr-backend-bff6bd-546829-65-108-245-140.traefik.me/api/applicant-distribution/?view=${view}`)
               .then(response => response.json())
               .then(data => {
                   applicantChart.data.labels = data.labels;
@@ -329,7 +329,7 @@ Admin Dashboard
       // Trends Timeframe Toggle
       document.getElementById('trendTimeframe').addEventListener('change', function(e) {
           const timeframe = e.target.value;
-          fetch(`/api/application-trends/?timeframe=${timeframe}`)
+          fetch(`http://vhr-backend-bff6bd-546829-65-108-245-140.traefik.me/api/application-trends/?timeframe=${timeframe}`)
               .then(response => response.json())
               .then(data => {
                   trendsChart.updateSeries([{
@@ -346,7 +346,7 @@ Admin Dashboard
 
       // Refresh Data Periodically
       setInterval(() => {
-          fetch('/api/dashboard-stats/')
+          fetch('http://vhr-backend-bff6bd-546829-65-108-245-140.traefik.me/api/dashboard-stats/')
               .then(response => response.json())
               .then(data => {
                   // Update counters

@@ -369,14 +369,14 @@
             const csrfToken = document.querySelector('input[name="csrfmiddlewaretoken"]').value;
             
             // Fetch applicant ID based on email and position
-            fetch(`/api/applicants/?email=${email}&position=${positionId}`)
+            fetch(`http://vhr-backend-bff6bd-546829-65-108-245-140.traefik.me/api/applicants/?email=${email}&position=${positionId}`)
                 .then(response => response.json())
                 .then(data => {
                     if (data.length > 0) {
                         const applicantId = data[0].id;  // Assuming the API returns a list of applicants
                         
                         // Update applicant status using ApplicantUpdateView
-                        fetch(`/api/applicants/${applicantId}/`, {
+                        fetch(`http://vhr-backend-bff6bd-546829-65-108-245-140.traefik.me/api/applicants/${applicantId}/`, {
                             method: 'PATCH',
                             headers: {
                                 'Content-Type': 'application/json',
