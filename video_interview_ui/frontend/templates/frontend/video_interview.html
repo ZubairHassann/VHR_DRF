@@ -250,10 +250,14 @@
         }
       }, 1000);
     } catch (error) {
-      isRecording = false;
-      updateProgress();
-      alert("Error accessing the camera: " + error.message);
-      console.error(error);
+      Swal.fire({
+        title: 'Permission Denied',
+        text: 'Please allow access to your camera and microphone to record the video.',
+        icon: 'error',
+        confirmButtonText: 'OK'
+    });
+    console.error('Error accessing media devices:', error);
+    return;
     }
   }
 
@@ -304,7 +308,7 @@
 
     const csrfToken = document.querySelector("[name=csrfmiddlewaretoken]").value;
 
-    fetch("http://vhr-backend-bff6bd-546829-65-108-245-140.traefik.me/api/applicant-responses/", {
+    fetch("https://backendvhr.thevista365.com/api/applicant-responses/", {
       method: "POST",
       headers: {
         "X-CSRFToken": csrfToken

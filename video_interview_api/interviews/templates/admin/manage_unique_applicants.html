@@ -269,6 +269,10 @@
                                     class="action-button inline-flex items-center px-3 py-1.5 bg-red-50 text-red-600 rounded-lg hover:bg-red-100">
                                 <i class="fas fa-times mr-1.5"></i> Reject
                             </button>
+                            <button onclick="removeApplicant('{{ applicant.email }}', {{ applicant.position }})" 
+                                    class="action-button inline-flex items-center px-3 py-1.5 bg-gray-50 text-gray-600 rounded-lg hover:bg-gray-100">
+                                <i class="fas fa-trash-alt mr-1.5"></i> Remove
+                            </button>
                         </td>
                     </tr>
                     {% empty %}
@@ -296,45 +300,70 @@
     });
 
     function updateStatus(email, position, status) {
-        if (confirm(`Are you sure you want to mark this applicant as ${status}?`)) {
-            const csrfToken = document.querySelector('input[name="csrfmiddlewaretoken"]').value;
-            
-            // Fetch applicant ID based on email and position
-            fetch(`http://vhr-backend-bff6bd-546829-65-108-245-140.traefik.me/api/applicants/?email=${email}&position=${position}`)
-                .then(response => response.json())
-                .then(data => {
-                    if (data.length > 0) {
-                        const applicantId = data[0].id;  // Assuming the API returns a list of applicants
-                        
-                        // Update applicant status using ApplicantUpdateView
-                        fetch(`http://vhr-backend-bff6bd-546829-65-108-245-140.traefik.me/api/applicants/${applicantId}/`, {
-                            method: 'PATCH',
-                            headers: {
-                                'Content-Type': 'application/json',
-                                'X-CSRFToken': csrfToken,
-                            },
-                            body: JSON.stringify({ status: status })
-                        }).then(response => {
-                            if (response.ok) {
-                                showToast(`Applicant marked as ${status}`);
-                                window.location.reload();
-                            } else {
-                                response.json().then(data => {
-                                    showToast(`Error: ${data.error}`);
+        if (window.Swal && typeof window.Swal.fire === 'function') {
+            Swal.fire({
+                title: `Are you sure?`,
+                text: `You are about to mark this applicant as ${status}.`,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#3085d6',
+                cancelButtonColor: '#d33',
+                confirmButtonText: 'Yes, proceed!'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    const csrfToken = document.querySelector('input[name="csrfmiddlewaretoken"]').value;
+    
+                    fetch(`https://backendvhr.thevista365.com/api/applicants/?email=${email}&position=${position}`)
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.length > 0) {
+                                const applicantId = data[0].id;
+    
+                                fetch(`https://backendvhr.thevista365.com/api/applicants/${applicantId}/`, {
+                                    method: 'PATCH',
+                                    headers: {
+                                        'Content-Type': 'application/json',
+                                        'X-CSRFToken': csrfToken,
+                                    },
+                                    body: JSON.stringify({ status: status })
+                                }).then(response => {
+                                    if (response.ok) {
+                                        Swal.fire(
+                                            'Updated!',
+                                            `Applicant marked as ${status}.`,
+                                            'success'
+                                        ).then(() => {
+                                            window.location.reload();
+                                        });
+                                    } else {
+                                        response.json().then(data => {
+                                            Swal.fire(
+                                                'Error!',
+                                                data.error || 'Failed to update status.',
+                                                'error'
+                                            );
+                                        });
+                                    }
                                 });
+                            } else {
+                                Swal.fire(
+                                    'Error!',
+                                    'Applicant not found.',
+                                    'error'
+                                );
                             }
                         });
-                    } else {
-                        showToast(`Error: Applicant not found`);
-                    }
-                });
+                }
+            });
+        } else {
+            alert('SweetAlert is required for this action. Please ensure it is properly loaded.');
         }
     }
 
     function sendEmail(email, status, positionId) {
         const csrfToken = document.querySelector('input[name="csrfmiddlewaretoken"]').value;
-
-        fetch('http://vhr-backend-bff6bd-546829-65-108-245-140.traefik.me/api/send_applicant_email/', {
+    
+        fetch('https://backendvhr.thevista365.com/api/send_applicant_email/', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -343,20 +372,32 @@
             body: JSON.stringify({
                 email: email,
                 status: status,
-                position_id: positionId  // Include the position ID
+                position_id: positionId
             })
         })
         .then(response => response.json())
         .then(data => {
             if (data.success) {
-                showToast(data.success, 'success');
+                Swal.fire(
+                    'Success!',
+                    data.success,
+                    'success'
+                );
             } else {
-                showToast(data.error, 'error');
+                Swal.fire(
+                    'Error!',
+                    data.error || 'Failed to send email.',
+                    'error'
+                );
             }
         })
         .catch(error => {
             console.error('Error:', error);
-            showToast('An error occurred while sending the email.', 'error');
+            Swal.fire(
+                'Error!',
+                'An error occurred while sending the email.',
+                'error'
+            );
         });
     }
 
@@ -382,5 +423,70 @@
             }
         });
     });
+
+    function removeApplicant(email, position) {
+        // Ensure Swal is defined before using it
+        if (window.Swal && typeof window.Swal.fire === 'function') {
+            Swal.fire({
+                title: 'Are you sure?',
+                text: "This action will permanently remove this applicant's application. This cannot be undone!",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#3085d6',
+                confirmButtonText: 'Yes, remove it!'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+                    console.log('CSRF Token:', csrfToken); // Debugging
+        
+                    fetch(`/api/applicants/?email=${email}&position=${position}`)
+                        .then(response => response.json())
+                        .then(data => {
+                            console.log('Applicant Data:', data); // Debugging
+                            if (data.length > 0) {
+                                const applicantId = data[0].id;
+                                console.log('Applicant ID:', applicantId); // Debugging
+                                return fetch(`/api/applicants/${applicantId}/`, {
+                                    method: 'DELETE',
+                                    headers: {
+                                        'Content-Type': 'application/json',
+                                        'X-CSRFToken': csrfToken,
+                                    },
+                                    credentials: 'same-origin'
+                                });
+                            } else {
+                                throw new Error('Applicant not found');
+                            }
+                        })
+                        .then(response => {
+                            console.log('Response Status:', response.status); // Debugging
+                            if (response.ok) {
+                                Swal.fire({
+                                    title: 'Removed!',
+                                    text: 'The applicant has been removed successfully.',
+                                    icon: 'success'
+                                }).then(() => {
+                                    window.location.reload();
+                                });
+                            } else {
+                                throw new Error('Failed to remove applicant');
+                            }
+                        })
+                        .catch(error => {
+                            console.error('Error:', error); // Debugging
+                            Swal.fire(
+                                'Error!',
+                                error.message,
+                                'error'
+                            );
+                        });
+                }
+            });
+        } else {
+            console.error('SweetAlert is not defined.');
+            alert('SweetAlert is required for this action. Please ensure it is properly loaded.');
+        }
+    }
 </script>
 {% endblock %}

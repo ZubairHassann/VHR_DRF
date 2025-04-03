@@ -16,7 +16,7 @@
 
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        fetch('http://vhr-backend-bff6bd-546829-65-108-245-140.traefik.me/api/positions/')
+        fetch('https://backendvhr.thevista365.com/api/positions/')
             .then(response => {
                 if (!response.ok) {
                     throw new Error('Failed to fetch positions');
@@ -59,7 +59,7 @@
 
     
 function applyJob(positionId) {
-    fetch(`http://vhr-backend-bff6bd-546829-65-108-245-140.traefik.me/${positionId}/apply/`, {
+    fetch(`https://backendvhr.thevista365.com/${positionId}/apply/`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',

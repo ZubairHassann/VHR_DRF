@@ -41,6 +41,8 @@ from interviews.views import (
 
 # API Router Setup
 router = DefaultRouter()
+router.scheme = 'https'
+
 router.register(r'positions', PositionViewSet)
 router.register(r'applicants', ApplicantViewSet)
 router.register(r'questions', QuestionViewSet, basename='question')

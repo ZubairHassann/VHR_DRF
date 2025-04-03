@@ -1,4 +1,3 @@
-<!-- filepath: /home/reicho/Mega Sync Backups/Coding/VHR/VHR_DRF/video_interview_api/interviews/templates/admin/manage_positions.html -->
 {% extends "admin/base_admin.html" %}
 {% block title %}Manage Positions{% endblock %}
 {% block page_title %}Manage Positions{% endblock %}
@@ -147,7 +146,7 @@
 
     // Edit position function
     function editPosition(id) {
-        fetch(`http://vhr-backend-bff6bd-546829-65-108-245-140.traefik.me/api/positions/${id}/`)
+        fetch(`https://backendvhr.thevista365.com/api/positions/${id}/`)
             .then(response => {
                 if (!response.ok) {
                     throw new Error('Failed to fetch position data');
@@ -179,7 +178,7 @@
         if (confirm('Are you sure you want to delete this position?')) {
             const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
             
-            fetch(`http://vhr-backend-bff6bd-546829-65-108-245-140.traefik.me/api/positions/${id}/`, {
+            fetch(`https://backendvhr.thevista365.com/api/positions/${id}/`, {
                 method: 'DELETE',
                 headers: {
                     'X-CSRFToken': csrfToken,
@@ -217,7 +216,7 @@ if (editForm) {
 
         const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
 
-        fetch(`http://vhr-backend-bff6bd-546829-65-108-245-140.traefik.me/api/positions/${id}/`, {
+        fetch(`https://backendvhr.thevista365.com/api/positions/${id}/`, {
             method: 'PATCH',
             headers: {
                 'Content-Type': 'application/json',

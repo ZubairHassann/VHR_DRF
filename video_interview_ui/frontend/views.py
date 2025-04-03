@@ -11,8 +11,8 @@ from django.contrib import messages
 from django.views.decorators.http import require_http_methods
 from config import settings
 
-BACKEND_API_URL = "http://vhr-backend-bff6bd-546829-65-108-245-140.traefik.me/api"
 # BACKEND_API_URL = "http://127.0.0.1:8000/api"
+BACKEND_API_URL = "https://backendvhr.thevista365.com/api"
 
 def register(request):
     if request.method == "POST":
