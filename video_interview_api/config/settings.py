@@ -18,6 +18,10 @@ DEBUG = True
 ALLOWED_HOSTS = [
     "backendvhr.thevista365.com", # Backend domain
     "vhr.thevista365.com",  # frontend domain
+<<<<<<< HEAD
+=======
+    "https://backendvhr.thevista365.com",  # Backend domain
+>>>>>>> 2446212 (updated)
     "127.0.0.1",  # Local development
     "localhost",
 ]
@@ -122,6 +126,7 @@ USE_TZ = True
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 CORS_ALLOWED_ORIGINS = [
+    "https://backendvhr.thevista365.com",
     "http://127.0.0.1:8001",  #Local Frontend URL
     "https://vhr.thevista365.com" #Deployed Frontend URL
 
@@ -129,7 +134,11 @@ CORS_ALLOWED_ORIGINS = [
 
 CORS_ALLOW_ALL_ORIGINS = True
 
+<<<<<<< HEAD
 BACKEND_API_URL = "https://backendvhr.thevista365.com"
+=======
+BACKEND_API_URL = "https://backendvhr.thevista365.com/"
+>>>>>>> 2446212 (updated)
 # BACKEND_API_URL = "http://127.0.0.1:8000"
 
 MEDIA_URL = '/media/'

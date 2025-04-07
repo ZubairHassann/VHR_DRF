@@ -14,7 +14,7 @@ SECRET_KEY = 'django-insecure-2k0r6mc@2qb5a2@)tgx6xjr@%pte-sfh8$hukrp&4wcaz5nbgu
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ["https://backendvhr.thevista365.com"]
 
 
 # Application definition
@@ -114,7 +114,12 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 
 CSRF_TRUSTED_ORIGINS = [
+<<<<<<< HEAD
     "https://backendvhr.thevista365.com",
     "https://backendvhr.thevista365.com",  
+=======
+    "https://backendvhr.thevista365.com/",
+    "http://127.0.0.1:8000",  
+>>>>>>> 2446212 (updated)
     "http://localhost:8000",
 ]
